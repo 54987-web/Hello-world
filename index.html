@@ -2066,8 +2066,8 @@
     }
     .rankup-toast.visible { transform: translateY(0); }
   </style>
-  <!-- Leaflet CSS（移除 integrity 避免驗證失敗，雙 CDN 備援） -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <!-- Leaflet CSS（jsDelivr，穩定不限速） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     /* 確保互動按鈕觸控面積符合 44px 最低標準 */
     .btn-primary { min-height: 44px; }
@@ -2538,26 +2538,10 @@
     </div>
   </div>
 
-  <!-- Leaflet JS（移除 integrity，備援 CDN） -->
-  <script>
-    (function() {
-      var s = document.createElement('script');
-      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      s.crossOrigin = '';
-      s.onerror = function() {
-        // unpkg 失敗時改用 jsDelivr
-        var s2 = document.createElement('script');
-        s2.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
-        document.head.appendChild(s2);
-        // 同步替換 CSS
-        var link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-      };
-      document.head.appendChild(s);
-    })();
-  </script>
+  <!-- Leaflet JS：同步載入，確保 L 全域在頁面完全就緒 -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet CSS 備援（jsDelivr） -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
   <!-- ===== 語系資料 ===== -->
   <script src="lang-data.js"></script>
   <!-- ===== 問診卡資料（Sub-Task 4）===== -->
