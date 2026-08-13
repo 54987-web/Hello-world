@@ -2412,13 +2412,19 @@
               <span data-i18n="mapFilterAll">全部</span>
             </button>
             <button class="map-filter-tab" data-filter="medical" onclick="setMapFilter('medical')">
-              <span data-i18n="mapFilterMedical">🏥 醫療</span>
+              🏥 <span data-i18n="mapFilterMedical">大型醫院</span>
+            </button>
+            <button class="map-filter-tab" data-filter="clinic" onclick="setMapFilter('clinic')">
+              🩺 診所／衛生所
+            </button>
+            <button class="map-filter-tab" data-filter="pharmacy" onclick="setMapFilter('pharmacy')">
+              💊 藥局
             </button>
             <button class="map-filter-tab" data-filter="legal" onclick="setMapFilter('legal')">
-              <span data-i18n="mapFilterLegal">⚖️ 法扶</span>
+              ⚖️ <span data-i18n="mapFilterLegal">法扶</span>
             </button>
             <button class="map-filter-tab" data-filter="newcomer" onclick="setMapFilter('newcomer')">
-              <span data-i18n="mapFilterNewcomer">🏠 服務中心</span>
+              🏠 <span data-i18n="mapFilterNewcomer">服務中心</span>
             </button>
           </div>
         </div>
@@ -2751,6 +2757,8 @@
 
     const MAP_TYPE_CONFIG = {
       medical:  { color: '#3b82f6', label: '醫' },
+      clinic:   { color: '#a855f7', label: '診' },
+      pharmacy: { color: '#ec4899', label: '藥' },
       legal:    { color: '#22c55e', label: '法' },
       newcomer: { color: '#f97316', label: '新' }
     };
