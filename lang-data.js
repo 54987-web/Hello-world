@@ -36,6 +36,13 @@ const LANG_DATA = {
     tabMedical: '問診卡',
     tabLabor: '權益速查',
     tabMap: '資源地圖',
+    tabTranslate: '對話翻譯',
+
+    // 對話翻譯模組
+    translateSubtitle:   '醫生說中文 ↔ 移工說母語，即時翻譯',
+    translateHint:       '按下方按鈕開始說話',
+    translateDoctorBtn:  '醫護人員說話',
+    translatePatientBtn: '移工說話',
 
     // 首頁
     homeGreeting: '您好',
@@ -213,6 +220,13 @@ const LANG_DATA = {
     tabMedical: 'Medical',
     tabLabor: 'Rights',
     tabMap: 'Map',
+    tabTranslate: 'Translate',
+
+    // Translation Module
+    translateSubtitle:   'Doctor speaks Chinese ↔ Migrant speaks native language, real-time translation',
+    translateHint:       'Press the button below to start speaking',
+    translateDoctorBtn:  'Medical Staff Speak',
+    translatePatientBtn: 'Migrant Worker Speak',
 
     homeGreeting: 'Hello',
     homeFamiliarityLabel: 'Familiarity',
@@ -358,6 +372,13 @@ const LANG_DATA = {
     tabMedical: 'Kartu Medis',
     tabLabor: 'Hak Kerja',
     tabMap: 'Peta Layanan',
+    tabTranslate: 'Terjemahan',
+
+    // Modul Penerjemahan
+    translateSubtitle:   'Dokter berbicara Mandarin ↔ Pekerja migran berbicara bahasa ibu, terjemahan langsung',
+    translateHint:       'Tekan tombol di bawah untuk mulai berbicara',
+    translateDoctorBtn:  'Tenaga Medis Bicara',
+    translatePatientBtn: 'Pekerja Migran Bicara',
 
     homeGreeting: 'Halo',
     homeFamiliarityLabel: 'Keakraban',
@@ -503,6 +524,13 @@ const LANG_DATA = {
     tabMedical: 'Thẻ y tế',
     tabLabor: 'Quyền lợi',
     tabMap: 'Bản đồ',
+    tabTranslate: 'Phiên dịch',
+
+    // Mô-đun Phiên Dịch
+    translateSubtitle:   'Bác sĩ nói tiếng Trung ↔ Lao động nói tiếng mẹ đẻ, dịch trực tiếp',
+    translateHint:       'Nhấn nút bên dưới để bắt đầu nói',
+    translateDoctorBtn:  'Nhân viên y tế nói',
+    translatePatientBtn: 'Lao động di trú nói',
 
     homeGreeting: 'Xin chào',
     homeFamiliarityLabel: 'Mức độ quen thuộc',
@@ -648,6 +676,13 @@ const LANG_DATA = {
     tabMedical: 'บัตรการแพทย์',
     tabLabor: 'สิทธิแรงงาน',
     tabMap: 'แผนที่',
+    tabTranslate: 'แปลภาษา',
+
+    // โมดูลแปลภาษา
+    translateSubtitle:   'แพทย์พูดภาษาจีน ↔ แรงงานพูดภาษาแม่ แปลแบบเรียลไทม์',
+    translateHint:       'กดปุ่มด้านล่างเพื่อเริ่มพูด',
+    translateDoctorBtn:  'บุคลากรทางการแพทย์พูด',
+    translatePatientBtn: 'แรงงานข้ามชาติพูด',
 
     homeGreeting: 'สวัสดี',
     homeFamiliarityLabel: 'ความคุ้นเคย',

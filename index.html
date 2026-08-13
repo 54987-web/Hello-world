@@ -13,6 +13,158 @@
   <meta name="apple-mobile-web-app-title" content="MigrantCare">
   <link rel="apple-touch-icon" href="icons/icon.svg">
   <style>
+    /* ===== 對話翻譯模組樣式 ===== */
+    .translate-inner {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      gap: 10px;
+    }
+    .translate-header { text-align: center; padding: 4px 0 8px; }
+    .translate-title { font-size: 18px; font-weight: 800; color: var(--color-navy); }
+    .translate-subtitle { font-size: 12px; color: var(--color-muted); margin-top: 3px; }
+
+    .translate-lang-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .translate-lang-box { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .translate-lang-label { font-size: 12px; font-weight: 700; color: var(--color-muted); }
+    .translate-lang-select {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 13px;
+      background: #f9fafb;
+      width: 100%;
+    }
+    .translate-swap-btn {
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 50%;
+      background: #f0f4ff;
+      color: var(--color-navy);
+      user-select: none;
+      transition: transform .2s;
+      flex-shrink: 0;
+    }
+    .translate-swap-btn:active { transform: rotate(180deg); }
+
+    .translate-log {
+      flex: 1;
+      overflow-y: auto;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .translate-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #bbb;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    /* 對話氣泡 */
+    .tl-bubble {
+      max-width: 90%;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .tl-bubble-doctor {
+      align-self: flex-start;
+      background: #e8f4fd;
+      border-bottom-left-radius: 4px;
+    }
+    .tl-bubble-patient {
+      align-self: flex-end;
+      background: #fff3ed;
+      border-bottom-right-radius: 4px;
+    }
+    .tl-bubble-who {
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      margin-bottom: 3px;
+    }
+    .tl-bubble-original { font-size: 13px; color: #555; margin-bottom: 4px; }
+    .tl-bubble-translated { font-size: 15px; font-weight: 700; color: #1f2328; }
+    .tl-translating { color: #aaa; font-style: italic; }
+    .tl-bubble-wrap { display: flex; margin-bottom: 10px; }
+    .wrap-doctor { justify-content: flex-start; }
+    .wrap-patient { justify-content: flex-end; }
+    .tl-bubble-icon { font-size: 20px; margin: 0 8px; align-self: flex-end; flex-shrink: 0; }
+    .tl-bubble-content { flex: 1; }
+    .tl-bubble-listening {
+      align-self: center;
+      background: #fff;
+      border: 2px dashed #FF6B35;
+      color: #FF6B35;
+      font-weight: 700;
+      animation: pulse-border 1s infinite;
+    }
+    @keyframes pulse-border {
+      0%,100% { border-color: #FF6B35; opacity: 1; }
+      50%      { border-color: #1B4F72; opacity: .7; }
+    }
+
+    /* 麥克風按鈕 */
+    .translate-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .tl-mic-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 8px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: transform .1s, opacity .1s;
+      min-height: 80px;
+    }
+    .tl-mic-btn:active { transform: scale(.95); }
+    .tl-mic-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .tl-mic-doctor { background: #dbeafe; color: #1e40af; }
+    .tl-mic-patient { background: #fff3ed; color: #c2410c; }
+    .tl-mic-icon { font-size: 28px; }
+    .tl-mic-btn.recording { animation: mic-pulse 0.8s infinite; }
+    @keyframes mic-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,107,53,.4); }
+      50%      { box-shadow: 0 0 0 10px rgba(255,107,53,0); }
+    }
+    .speech-not-supported {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      text-align: center;
+      color: #856404;
+    }
+
     /* ===== PWA 專用樣式 ===== */
     .offline-banner {
       position: fixed;
@@ -2555,6 +2707,77 @@
         </div>
       </div>
 
+      <!-- ══ 對話翻譯 View ══ -->
+      <div id="translate-view" class="main-view">
+        <div class="translate-inner">
+
+          <!-- 標題列 -->
+          <div class="translate-header">
+            <div class="translate-title">🗣️ <span data-i18n="tabTranslate">對話翻譯</span></div>
+            <div class="translate-subtitle" data-i18n="translateSubtitle">醫生說中文 ↔ 移工說母語，即時翻譯</div>
+          </div>
+
+          <!-- 語言選擇列 -->
+          <div class="translate-lang-row">
+            <div class="translate-lang-box">
+              <div class="translate-lang-label">🏥 醫護人員</div>
+              <select id="tl-doctor-lang" class="translate-lang-select">
+                <option value="zh-TW">🇹🇼 中文</option>
+                <option value="en-US">🇬🇧 English</option>
+              </select>
+            </div>
+            <div class="translate-swap-btn" onclick="swapTranslateLang()">⇄</div>
+            <div class="translate-lang-box">
+              <div class="translate-lang-label">👤 移工 / 患者</div>
+              <select id="tl-patient-lang" class="translate-lang-select">
+                <option value="id-ID">🇮🇩 Indonesia</option>
+                <option value="vi-VN">🇻🇳 Tiếng Việt</option>
+                <option value="th-TH">🇹🇭 ภาษาไทย</option>
+                <option value="en-US">🇬🇧 English</option>
+                <option value="zh-TW">🇹🇼 中文</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 對話記錄 -->
+          <div class="translate-log" id="translate-log">
+            <div class="translate-empty" id="translate-empty">
+              <div style="font-size:40px;margin-bottom:8px">🎤</div>
+              <div data-i18n="translateHint">按下方按鈕開始說話</div>
+            </div>
+          </div>
+
+          <!-- 錄音按鈕 -->
+          <div class="translate-btns">
+            <button class="tl-mic-btn tl-mic-doctor" id="btn-mic-doctor"
+                    onclick="startSpeech('doctor')">
+              <span class="tl-mic-icon">🏥</span>
+              <span class="tl-mic-label" data-i18n="translateDoctorBtn">醫護人員說話</span>
+            </button>
+            <button class="tl-mic-btn tl-mic-patient" id="btn-mic-patient"
+                    onclick="startSpeech('patient')">
+              <span class="tl-mic-icon">👤</span>
+              <span class="tl-mic-label" data-i18n="translatePatientBtn">移工說話</span>
+            </button>
+          </div>
+
+          <!-- 清除按鈕 -->
+          <div style="text-align:center;margin-top:8px">
+            <button onclick="clearTranslateLog()" style="
+              background:none;border:1px solid #ccc;border-radius:20px;
+              padding:6px 18px;font-size:13px;color:#888;cursor:pointer;">
+              🗑 清除對話
+            </button>
+          </div>
+
+          <!-- 不支援提示 -->
+          <div id="speech-not-supported" class="speech-not-supported hidden">
+            ⚠️ 此瀏覽器不支援語音辨識，請使用 <strong>Chrome</strong> 瀏覽器
+          </div>
+
+        </div>
+      </div>
+
     </div><!-- /.main-body -->
 
     <!-- 底部 Tab Bar -->
@@ -2578,6 +2801,11 @@
               onclick="switchTab('map')">
         <span class="tab-btn-icon">🗺</span>
         <span data-i18n="tabMap">資源地圖</span>
+      </button>
+      <button class="tab-btn" id="tab-translate" role="tab" aria-selected="false"
+              onclick="switchTab('translate')">
+        <span class="tab-btn-icon">🗣️</span>
+        <span data-i18n="tabTranslate">翻譯</span>
       </button>
     </nav>
 
@@ -2920,11 +3148,13 @@
       // Sub-Task 6：切換到資源地圖 Tab 時初始化或修正尺寸
       if (tabName === 'map') {
         if (!_mapState.initialized) {
-          // 下一 frame 確保 #map-view 已 display:flex
           requestAnimationFrame(() => initMap());
         } else if (_mapState.map) {
           requestAnimationFrame(() => _mapState.map.invalidateSize());
         }
+      }
+      if (tabName === 'translate') {
+        initTranslateView();
       }
     }
 
@@ -4104,6 +4334,245 @@
             padding:12px 16px;margin:8px;font-size:13px;line-height:1.6;white-space:pre-wrap;">${msg}</div>`);
         listEl.scrollTop = 0;
       }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       對話翻譯功能
+    ═══════════════════════════════════════════════════════════ */
+
+    // 語言代碼對應 MyMemory API 的語言代碼
+    const LANG_CODE_MAP = {
+      'zh-TW': 'zh-TW',
+      'en-US': 'en-US',
+      'id-ID': 'id',
+      'vi-VN': 'vi',
+      'th-TH': 'th',
+    };
+
+    // 語音辨識語言代碼（BCP-47）
+    const SPEECH_LANG_MAP = {
+      'zh-TW': 'zh-TW',
+      'en-US': 'en-US',
+      'id-ID': 'id-ID',
+      'vi-VN': 'vi-VN',
+      'th-TH': 'th-TH',
+    };
+
+    let _tlState = {
+      recognition: null,
+      listening: false,
+      currentRole: null, // 'doctor' | 'patient'
+    };
+
+    /**
+     * initTranslateView()
+     * 切換到翻譯 Tab 時呼叫，根據使用者語言預設 patient-lang
+     */
+    function initTranslateView() {
+      const user = _getCurrentUser();
+      if (!user) return;
+
+      // 根據 App 語言預設移工端語言
+      const langMap = { id: 'id-ID', vi: 'vi-VN', th: 'th-TH', en: 'en-US', zh: 'zh-TW' };
+      const defaultPatientLang = langMap[user.lang || 'id'] || 'id-ID';
+      const patientSel = document.getElementById('tl-patient-lang');
+      if (patientSel) patientSel.value = defaultPatientLang;
+
+      // 檢查語音辨識支援
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        const el = document.getElementById('speech-not-supported');
+        if (el) el.classList.remove('hidden');
+        document.getElementById('btn-mic-doctor').disabled = true;
+        document.getElementById('btn-mic-patient').disabled = true;
+      }
+    }
+
+    /**
+     * startSpeech(role)
+     * role: 'doctor' | 'patient'
+     * 啟動語音辨識 → 取得文字 → 翻譯 → 顯示氣泡
+     */
+    function startSpeech(role) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+
+      // 若已在錄音則停止
+      if (_tlState.listening && _tlState.recognition) {
+        _tlState.recognition.stop();
+        return;
+      }
+
+      const srcLangEl = role === 'doctor'
+        ? document.getElementById('tl-doctor-lang')
+        : document.getElementById('tl-patient-lang');
+      const srcLang = srcLangEl ? srcLangEl.value : 'zh-TW';
+      const speechLang = SPEECH_LANG_MAP[srcLang] || srcLang;
+
+      const btn = document.getElementById('btn-mic-' + role);
+      const otherBtn = document.getElementById('btn-mic-' + (role === 'doctor' ? 'patient' : 'doctor'));
+
+      const recog = new SpeechRecognition();
+      recog.lang = speechLang;
+      recog.interimResults = false;
+      recog.maxAlternatives = 1;
+      _tlState.recognition = recog;
+      _tlState.listening = true;
+      _tlState.currentRole = role;
+
+      // 更新按鈕狀態
+      if (btn) { btn.classList.add('recording'); btn.querySelector('.tl-mic-icon').textContent = '🔴'; }
+      if (otherBtn) otherBtn.disabled = true;
+
+      recog.onresult = function(e) {
+        const transcript = e.results[0][0].transcript.trim();
+        if (!transcript) return;
+
+        // 決定翻譯方向
+        const doctorLang  = document.getElementById('tl-doctor-lang').value;
+        const patientLang = document.getElementById('tl-patient-lang').value;
+        const targetLang  = role === 'doctor' ? patientLang : doctorLang;
+
+        // 顯示「說話中」氣泡（原文）
+        _addTranslateBubble(role, transcript, null, true);
+
+        // 呼叫翻譯 API
+        translateText(transcript, srcLang, targetLang, function(translated) {
+          // 更新最後一個氣泡加上譯文
+          _updateLastBubbleTranslation(translated);
+        });
+      };
+
+      recog.onerror = function(e) {
+        console.warn('Speech error:', e.error);
+        _resetMicButtons(role);
+      };
+
+      recog.onend = function() {
+        _resetMicButtons(role);
+      };
+
+      recog.start();
+    }
+
+    function _resetMicButtons(role) {
+      _tlState.listening = false;
+      _tlState.recognition = null;
+      const btn = document.getElementById('btn-mic-' + role);
+      const otherBtn = document.getElementById('btn-mic-' + (role === 'doctor' ? 'patient' : 'doctor'));
+      if (btn) {
+        btn.classList.remove('recording');
+        const iconEl = btn.querySelector('.tl-mic-icon');
+        if (iconEl) iconEl.textContent = role === 'doctor' ? '🏥' : '👤';
+      }
+      if (otherBtn) otherBtn.disabled = false;
+    }
+
+    /**
+     * translateText(text, srcLang, tgtLang, callback)
+     * 使用 MyMemory 免費 API 翻譯文字
+     */
+    function translateText(text, srcLang, tgtLang, callback) {
+      const from = LANG_CODE_MAP[srcLang] || srcLang;
+      const to   = LANG_CODE_MAP[tgtLang] || tgtLang;
+
+      if (from === to) {
+        callback(text);
+        return;
+      }
+
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          const translated = data.responseData && data.responseData.translatedText
+            ? data.responseData.translatedText
+            : text;
+          callback(translated);
+        })
+        .catch(() => callback('[翻譯失敗]'));
+    }
+
+    /**
+     * _addTranslateBubble(role, original, translated, pending)
+     * 在對話記錄區新增一個氣泡
+     */
+    function _addTranslateBubble(role, original, translated, pending) {
+      const log = document.getElementById('translate-log');
+      const empty = document.getElementById('translate-empty');
+      if (empty) empty.style.display = 'none';
+
+      const isDoctor = role === 'doctor';
+      const side = isDoctor ? 'bubble-doctor' : 'bubble-patient';
+      const icon = isDoctor ? '🏥' : '👤';
+
+      const bubbleId = 'tl-bubble-' + Date.now();
+      const html = `
+        <div class="tl-bubble-wrap ${isDoctor ? 'wrap-doctor' : 'wrap-patient'}" id="${bubbleId}">
+          <div class="tl-bubble ${side}">
+            <div class="tl-bubble-icon">${icon}</div>
+            <div class="tl-bubble-content">
+              <div class="tl-bubble-original">${_escHtml(original)}</div>
+              <div class="tl-bubble-translated">${pending ? '<span class="tl-translating">翻譯中…</span>' : (translated ? _escHtml(translated) : '')}</div>
+            </div>
+          </div>
+        </div>`;
+      log.insertAdjacentHTML('beforeend', html);
+      log.scrollTop = log.scrollHeight;
+
+      // 存到全域，方便更新
+      log.dataset.lastBubble = bubbleId;
+    }
+
+    function _updateLastBubbleTranslation(translated) {
+      const log = document.getElementById('translate-log');
+      const lastId = log && log.dataset.lastBubble;
+      if (!lastId) return;
+      const el = document.getElementById(lastId);
+      if (!el) return;
+      const transEl = el.querySelector('.tl-bubble-translated');
+      if (transEl) transEl.innerHTML = _escHtml(translated);
+    }
+
+    function _escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /**
+     * swapTranslateLang()
+     * 交換醫護端與移工端語言
+     */
+    function swapTranslateLang() {
+      const d = document.getElementById('tl-doctor-lang');
+      const p = document.getElementById('tl-patient-lang');
+      if (!d || !p) return;
+      const tmp = d.value;
+      d.value = p.value;
+      // 若 doctor select 沒有此 option，補上
+      if (!d.querySelector(`option[value="${p.value}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = p.value;
+        opt.textContent = p.options[p.selectedIndex].textContent;
+        d.appendChild(opt);
+      }
+      p.value = tmp;
+    }
+
+    /**
+     * clearTranslateLog()
+     * 清除所有對話記錄
+     */
+    function clearTranslateLog() {
+      const log = document.getElementById('translate-log');
+      if (!log) return;
+      log.innerHTML = `
+        <div class="translate-empty" id="translate-empty">
+          <div style="font-size:40px;margin-bottom:8px">🎤</div>
+          <div data-i18n="translateHint">按下方按鈕開始說話</div>
+        </div>`;
+      delete log.dataset.lastBubble;
+      // 重新套用 i18n
+      applyI18n();
     }
 
     /* ═══════════════════════════════════════════════════════════
