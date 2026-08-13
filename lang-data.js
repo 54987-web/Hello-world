@@ -141,6 +141,24 @@ const LANG_DATA = {
     gameMatchInstruct:   '這個圖示代表什麼？請選擇正確答案',
     gameConfirmSort:     '確認排序',
     gameLandmarkName:    '📍 地標任務',
+
+    // Sub-Task 8 — 成就機制 & 排名系統
+    achievementsTitle:   '成就',
+    achUnlockedAt:       '解鎖於',
+    achLocked:           '未解鎖',
+    rankUpTitle:         '段位升級！',
+
+    // 10 個成就名稱
+    ach_first_game:     '初次出賽',
+    ach_first_card:     '初次問診',
+    ach_labor_explorer: '勞工探索家',
+    ach_labor_master:   '勞工達人',
+    ach_landmark_3:     '三站通',
+    ach_landmark_all:   '地標全覽',
+    ach_score_40:       '穩健成長',
+    ach_score_80:       '高手境界',
+    ach_streak_3:       '連續挑戰',
+    ach_perfect_game:   '完美作答',
   },
 
   en: {
@@ -269,6 +287,23 @@ const LANG_DATA = {
     gameMatchInstruct:   'What does this icon represent? Choose the correct answer',
     gameConfirmSort:     'Confirm Order',
     gameLandmarkName:    '📍 Landmark Mission',
+
+    // Sub-Task 8 — Achievements & Rank System
+    achievementsTitle:   'Achievements',
+    achUnlockedAt:       'Unlocked on',
+    achLocked:           'Locked',
+    rankUpTitle:         'Rank Up!',
+
+    ach_first_game:     'First Game',
+    ach_first_card:     'First Medical Card',
+    ach_labor_explorer: 'Labor Explorer',
+    ach_labor_master:   'Labor Master',
+    ach_landmark_3:     'Triple Landmark',
+    ach_landmark_all:   'All Landmarks',
+    ach_score_40:       'Steady Growth',
+    ach_score_80:       'Expert Level',
+    ach_streak_3:       'Streak Challenge',
+    ach_perfect_game:   'Perfect Answer',
   },
 
   id: {
@@ -397,6 +432,23 @@ const LANG_DATA = {
     gameMatchInstruct:   'Ikon ini mewakili apa? Pilih jawaban yang benar',
     gameConfirmSort:     'Konfirmasi Urutan',
     gameLandmarkName:    '📍 Misi Landmark',
+
+    // Sub-Task 8 — Pencapaian & Sistem Peringkat
+    achievementsTitle:   'Pencapaian',
+    achUnlockedAt:       'Dibuka pada',
+    achLocked:           'Terkunci',
+    rankUpTitle:         'Naik Peringkat!',
+
+    ach_first_game:     'Permainan Pertama',
+    ach_first_card:     'Kartu Medis Pertama',
+    ach_labor_explorer: 'Penjelajah Hak Kerja',
+    ach_labor_master:   'Ahli Hak Kerja',
+    ach_landmark_3:     'Tiga Landmark',
+    ach_landmark_all:   'Semua Landmark',
+    ach_score_40:       'Pertumbuhan Stabil',
+    ach_score_80:       'Level Ahli',
+    ach_streak_3:       'Tantangan Beruntun',
+    ach_perfect_game:   'Jawaban Sempurna',
   },
 
   vi: {
@@ -525,6 +577,23 @@ const LANG_DATA = {
     gameMatchInstruct:   'Biểu tượng này đại diện cho gì? Chọn câu trả lời đúng',
     gameConfirmSort:     'Xác nhận thứ tự',
     gameLandmarkName:    '📍 Nhiệm vụ Địa danh',
+
+    // Sub-Task 8 — Thành tích & Hệ thống Hạng
+    achievementsTitle:   'Thành tích',
+    achUnlockedAt:       'Mở khóa lúc',
+    achLocked:           'Chưa mở',
+    rankUpTitle:         'Lên Hạng!',
+
+    ach_first_game:     'Lần chơi đầu tiên',
+    ach_first_card:     'Thẻ y tế đầu tiên',
+    ach_labor_explorer: 'Nhà khám phá quyền lao động',
+    ach_labor_master:   'Chuyên gia quyền lao động',
+    ach_landmark_3:     'Ba địa danh',
+    ach_landmark_all:   'Tất cả địa danh',
+    ach_score_40:       'Tăng trưởng ổn định',
+    ach_score_80:       'Cấp độ chuyên gia',
+    ach_streak_3:       'Thử thách liên tiếp',
+    ach_perfect_game:   'Trả lời hoàn hảo',
   },
 
   th: {
@@ -653,5 +722,22 @@ const LANG_DATA = {
     gameMatchInstruct:   'ไอคอนนี้แทนอะไร? เลือกคำตอบที่ถูกต้อง',
     gameConfirmSort:     'ยืนยันลำดับ',
     gameLandmarkName:    '📍 ภารกิจสถานที่สำคัญ',
+
+    // Sub-Task 8 — ความสำเร็จ & ระบบอันดับ
+    achievementsTitle:   'ความสำเร็จ',
+    achUnlockedAt:       'ปลดล็อกเมื่อ',
+    achLocked:           'ยังไม่ปลดล็อก',
+    rankUpTitle:         'เลื่อนระดับ!',
+
+    ach_first_game:     'เล่นครั้งแรก',
+    ach_first_card:     'บัตรการแพทย์ครั้งแรก',
+    ach_labor_explorer: 'นักสำรวจสิทธิแรงงาน',
+    ach_labor_master:   'ผู้เชี่ยวชาญสิทธิแรงงาน',
+    ach_landmark_3:     'สามสถานที่',
+    ach_landmark_all:   'ครบทุกสถานที่',
+    ach_score_40:       'การเติบโตที่มั่นคง',
+    ach_score_80:       'ระดับผู้เชี่ยวชาญ',
+    ach_streak_3:       'ความท้าทายต่อเนื่อง',
+    ach_perfect_game:   'ตอบได้สมบูรณ์แบบ',
   },
 };

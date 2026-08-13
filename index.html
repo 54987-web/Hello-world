@@ -5,7 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#FF6B35" />
   <title>MigrantCare Kaohsiung</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MigrantCare">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
   <style>
+    /* ===== PWA 專用樣式 ===== */
+    .offline-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #333;
+      color: #fff;
+      text-align: center;
+      font-size: 13px;
+      padding: 6px 12px;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+    }
+    .offline-banner.hidden { display: none; }
+
+    .ios-tip {
+      margin: 16px auto 0;
+      max-width: 320px;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .ios-tip.hidden { display: none; }
+
     /* ===== CSS 變數 ===== */
     :root {
       --color-primary:   #FF6B35;
@@ -1496,7 +1531,7 @@
     /* ---- #game-toast 底部通知條 ---- */
     .game-toast {
       position: fixed;
-      bottom: 68px;        /* Tab Bar(60) + 8px margin */
+      bottom: 72px;        /* Tab Bar(60) + 12px margin */
       left: .75rem;
       right: .75rem;
       z-index: 300;
@@ -2034,6 +2069,16 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    /* 確保互動按鈕觸控面積符合 44px 最低標準 */
+    .btn-primary { min-height: 44px; }
+    /* 全域基礎字級 */
+    html { font-size: 15px; }
+    /* #achievement-grid id 對應（class 已定義 display:grid） */
+    #achievement-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .45rem; padding: .25rem 1rem .75rem; }
+    /* #rankup-toast id 對應（class 已定義） */
+    #rankup-toast { position: fixed; top: 0; left: 0; right: 0; z-index: 550; }
+  </style>
 </head>
 <body>
 
@@ -2081,7 +2126,18 @@
       </button>
 
     </div>
+
+    <!-- iOS 安裝引導提示 -->
+    <div id="ios-install-tip" class="ios-tip hidden">
+      📲 iOS 用戶：點擊下方 <strong>分享</strong> 按鈕 → 「加入主畫面」即可安裝 App
+    </div>
+
   </section>
+
+  <!-- 離線提示橫幅（全域） -->
+  <div id="offline-banner" class="offline-banner hidden">
+    📶 目前離線 — 地圖等部分功能可能受限
+  </div>
 
   <!-- ══════════════ 登入頁 ══════════════ -->
   <section id="auth-screen" class="screen hidden">
@@ -2467,6 +2523,9 @@
     </div>
   </div>
 
+  <!-- Leaflet JS（必須在 data scripts 之前，確保 L 全域可用） -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLEg=" crossorigin=""></script>
   <!-- ===== 語系資料 ===== -->
   <script src="lang-data.js"></script>
   <!-- ===== 問診卡資料（Sub-Task 4）===== -->
@@ -2477,9 +2536,6 @@
   <script src="locations-data.js"></script>
   <!-- ===== 遊戲題庫（Sub-Task 7）===== -->
   <script src="game-data.js"></script>
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLEg=" crossorigin=""></script>
 
   <script>
     /* ═══════════════════════════════════════════════════════════
@@ -2703,6 +2759,11 @@
         btn.classList.toggle('active', isActive);
         btn.setAttribute('aria-selected', String(isActive));
       });
+      // home：刷新熟悉度環與成就（確保資料最新）
+      if (tabName === 'home') {
+        renderFamiliarityChart();
+        renderAchievements();
+      }
       // Sub-Task 4：切換到問診卡 Tab 時初始化
       if (tabName === 'symptom') {
         initSymptomView();
@@ -2820,6 +2881,9 @@
 
       // 圓形進度環 & 統計
       renderFamiliarityChart();
+
+      // Sub-Task 8：成就格子初始渲染
+      renderAchievements();
 
       // 遊戲 Toggle 狀態
       const toggleEl = document.getElementById('game-toggle-input');
@@ -4416,6 +4480,38 @@
         showScreen('lang-screen');
       }
     })();
+
+    // ===== PWA: iOS 安裝引導 =====
+    (function () {
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isStandalone = window.navigator.standalone;
+      const hasShownTip = localStorage.getItem('ios_tip_shown');
+      if (isIOS && !isStandalone && !hasShownTip) {
+        const tip = document.getElementById('ios-install-tip');
+        if (tip) tip.classList.remove('hidden');
+        localStorage.setItem('ios_tip_shown', '1');
+      }
+    })();
+
+    // ===== PWA: 離線偵測 =====
+    window.addEventListener('online',  () => {
+      document.getElementById('offline-banner').classList.add('hidden');
+    });
+    window.addEventListener('offline', () => {
+      document.getElementById('offline-banner').classList.remove('hidden');
+    });
+    if (!navigator.onLine) {
+      document.getElementById('offline-banner').classList.remove('hidden');
+    }
+
+    // ===== PWA: Service Worker 註冊 =====
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('[SW] Registered:', reg.scope))
+          .catch(err => console.warn('[SW] Registration failed:', err));
+      });
+    }
   </script>
 
 </body>
