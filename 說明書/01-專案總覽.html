@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MigrantCare 說明書 — 01 專案總覽</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:-apple-system,'Segoe UI',sans-serif; background:#f7f8fa; color:#1f2328; font-size:15px; line-height:1.7; }
+  .hero { background:linear-gradient(135deg,#FF6B35,#1B4F72); color:#fff; padding:48px 24px; text-align:center; }
+  .hero h1 { font-size:28px; font-weight:800; margin-bottom:8px; }
+  .hero p { font-size:15px; opacity:.85; max-width:500px; margin:0 auto; }
+  .nav { background:#fff; border-bottom:1px solid #e5e7eb; padding:12px 24px; display:flex; gap:16px; flex-wrap:wrap; }
+  .nav a { color:#FF6B35; text-decoration:none; font-size:13px; font-weight:600; }
+  .nav a:hover { text-decoration:underline; }
+  .container { max-width:760px; margin:0 auto; padding:32px 24px; }
+  h2 { font-size:20px; font-weight:700; color:#1B4F72; margin:32px 0 12px; border-left:4px solid #FF6B35; padding-left:12px; }
+  h3 { font-size:16px; font-weight:700; color:#333; margin:20px 0 8px; }
+  p { margin-bottom:12px; color:#444; }
+  .card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin:16px 0; }
+  .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px 12px; text-align:center; }
+  .card .icon { font-size:32px; margin-bottom:8px; }
+  .card .title { font-size:13px; font-weight:700; color:#1f2328; }
+  .card .desc { font-size:12px; color:#666; margin-top:4px; }
+  table { width:100%; border-collapse:collapse; margin:16px 0; background:#fff; border-radius:8px; overflow:hidden; border:1px solid #e5e7eb; }
+  th { background:#1B4F72; color:#fff; padding:10px 14px; font-size:13px; text-align:left; }
+  td { padding:10px 14px; font-size:13px; border-bottom:1px solid #f0f0f0; }
+  tr:last-child td { border-bottom:none; }
+  .badge { display:inline-block; background:#fff3ed; color:#FF6B35; border:1px solid #FF6B35; border-radius:20px; padding:2px 10px; font-size:12px; font-weight:600; }
+  .pain-block { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin:10px 0; display:flex; gap:14px; align-items:flex-start; }
+  .pain-block .num { background:#FF6B35; color:#fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0; }
+  .pain-block .content .label { font-weight:700; color:#1f2328; font-size:14px; }
+  .pain-block .content .sol { font-size:13px; color:#666; margin-top:2px; }
+  .arrow { color:#FF6B35; font-weight:700; }
+  .file-tree { background:#1e1e2e; color:#cdd6f4; border-radius:10px; padding:20px; font-family:monospace; font-size:13px; line-height:2; margin:16px 0; }
+  .file-tree .dir { color:#89dceb; }
+  .file-tree .file { color:#a6e3a1; }
+  .file-tree .comment { color:#6c7086; }
+  .lang-list { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+  .lang-chip { background:#fff; border:1px solid #e5e7eb; border-radius:20px; padding:6px 14px; font-size:13px; }
+  footer { text-align:center; font-size:12px; color:#999; border-top:1px solid #e5e7eb; padding:20px; margin-top:40px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="font-size:52px;margin-bottom:12px">🏥</div>
+  <h1>MigrantCare Kaohsiung</h1>
+  <p>多語系外籍移工與新住民求助平台<br>圖像化問診 × 勞工權益 × GPS地標遊戲</p>
+</div>
+
+<div class="nav">
+  <a href="01-專案總覽.html">📋 專案總覽</a>
+  <a href="02-安裝與開啟.html">📱 安裝說明</a>
+  <a href="03-功能操作說明.html">🔧 功能說明</a>
+  <a href="04-段位與成就系統.html">🏆 段位成就</a>
+</div>
+
+<div class="container">
+
+  <h2>📌 專案背景與目標</h2>
+  <p>高雄市外籍移工與新住民在醫療急症或勞資糾紛時，常因<strong>語言障礙</strong>與<strong>法律資訊不對等</strong>，不敢或不知如何求助。MigrantCare Kaohsiung 針對這個痛點，建立一套<strong>5語多媒體求助 PWA App</strong>，讓移工在緊急情況下也能快速溝通、找到幫助。</p>
+
+  <h2>🔥 解決四大痛點</h2>
+
+  <div class="pain-block">
+    <div class="num">1</div>
+    <div class="content">
+      <div class="label">醫療現場語言不通</div>
+      <div class="sol">→ 圖像化問診卡 + 雙語出示卡（直接給醫護人員看）</div>
+    </div>
+  </div>
+  <div class="pain-block">
+    <div class="num">2</div>
+    <div class="content">
+      <div class="label">勞資糾紛不知如何求助</div>
+      <div class="sol">→ 情境式權益速查 + 合法判斷 + 證據收集提醒</div>
+    </div>
+  </div>
+  <div class="pain-block">
+    <div class="num">3</div>
+    <div class="content">
+      <div class="label">不知道去哪裡找資源</div>
+      <div class="sol">→ 友善機構地圖（29個地標）+ GPS 即時定位</div>
+    </div>
+  </div>
+  <div class="pain-block">
+    <div class="num">4</div>
+    <div class="content">
+      <div class="label">學習動機不足</div>
+      <div class="sol">→ GPS 觸發隨機小遊戲 + 成就徽章 + 5段排名機制</div>
+    </div>
+  </div>
+
+  <h2>🌍 支援語言</h2>
+  <div class="lang-list">
+    <span class="lang-chip">🇹🇼 中文（繁體）</span>
+    <span class="lang-chip">🇬🇧 English</span>
+    <span class="lang-chip">🇮🇩 Bahasa Indonesia</span>
+    <span class="lang-chip">🇻🇳 Tiếng Việt</span>
+    <span class="lang-chip">🇹🇭 ภาษาไทย</span>
+  </div>
+
+  <h2>📱 PWA 手機 App 特性</h2>
+  <div class="card-grid">
+    <div class="card"><div class="icon">📲</div><div class="title">免安裝包</div><div class="desc">瀏覽器「加入主畫面」即可</div></div>
+    <div class="card"><div class="icon">📶</div><div class="title">離線可用</div><div class="desc">Service Worker 快取</div></div>
+    <div class="card"><div class="icon">🖥</div><div class="title">全螢幕模式</div><div class="desc">無瀏覽器 UI 干擾</div></div>
+    <div class="card"><div class="icon">🆓</div><div class="title">完全免費</div><div class="desc">GitHub Pages 部署</div></div>
+  </div>
+
+  <h2>⚙️ 技術棧</h2>
+  <table>
+    <tr><th>技術</th><th>用途</th></tr>
+    <tr><td>HTML5 + CSS3 + Vanilla JS</td><td>前端主體（純靜態，無框架）</td></tr>
+    <tr><td>PWA Manifest + Service Worker</td><td>手機安裝、離線快取</td></tr>
+    <tr><td>Leaflet.js + OpenStreetMap</td><td>免費地圖（無需 API Key）</td></tr>
+    <tr><td>localStorage</td><td>使用者帳號、進度、成就資料</td></tr>
+    <tr><td>Geolocation API</td><td>GPS 定位、地標遊戲觸發</td></tr>
+    <tr><td>GitHub Pages</td><td>HTTPS 部署（PWA 必要）</td></tr>
+  </table>
+
+  <h2>📁 檔案結構</h2>
+  <div class="file-tree">
+    <span class="dir">Hello-world/</span><br>
+    ├── <span class="file">index.html</span>            <span class="comment">← 主應用（全部功能整合）</span><br>
+    ├── <span class="file">manifest.json</span>         <span class="comment">← PWA App 設定</span><br>
+    ├── <span class="file">sw.js</span>                 <span class="comment">← Service Worker 離線快取</span><br>
+    ├── <span class="dir">icons/</span>                 <span class="comment">← App 圖示</span><br>
+    ├── <span class="file">lang-data.js</span>          <span class="comment">← 5語 UI 字串</span><br>
+    ├── <span class="file">symptoms-data.js</span>      <span class="comment">← 身體部位 &amp; 痛感資料</span><br>
+    ├── <span class="file">labor-data.js</span>         <span class="comment">← 勞工情境問答（24題）</span><br>
+    ├── <span class="file">locations-data.js</span>     <span class="comment">← 高雄 29 個友善機構</span><br>
+    ├── <span class="file">game-data.js</span>          <span class="comment">← 三種遊戲題庫（24題）</span><br>
+    └── <span class="dir">說明書/</span>               <span class="comment">← 本說明書</span>
+  </div>
+
+  <h2>🔗 相關連結</h2>
+  <table>
+    <tr><th>項目</th><th>連結</th></tr>
+    <tr><td>🌐 線上網站</td><td><a href="https://54987-web.github.io/Hello-world/" target="_blank">https://54987-web.github.io/Hello-world/</a></td></tr>
+    <tr><td>📦 GitHub Repo</td><td><a href="https://github.com/54987-web/Hello-world" target="_blank">github.com/54987-web/Hello-world</a></td></tr>
+    <tr><td>🛠 開發分支</td><td>feature/涂祐-技術開發</td></tr>
+  </table>
+
+</div>
+<footer>MigrantCare Kaohsiung 說明書 — Made with IBM Bob</footer>
+</body>
+</html>

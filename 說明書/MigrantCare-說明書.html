@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MigrantCare Kaohsiung 說明書</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,'Segoe UI',sans-serif;background:#f7f8fa;color:#1f2328;font-size:15px;line-height:1.7}
+  /* ── Hero ── */
+  .hero{background:linear-gradient(135deg,#FF6B35 0%,#1B4F72 100%);color:#fff;padding:52px 24px 40px;text-align:center}
+  .hero-icon{font-size:64px;margin-bottom:12px}
+  .hero h1{font-size:26px;font-weight:800;margin-bottom:6px}
+  .hero p{font-size:14px;opacity:.88;max-width:480px;margin:0 auto}
+  /* ── Layout ── */
+  .container{max-width:760px;margin:0 auto;padding:32px 20px 60px}
+  /* ── Section ── */
+  .section{margin-bottom:36px}
+  h2{font-size:18px;font-weight:800;color:#1B4F72;margin-bottom:14px;padding-left:12px;border-left:4px solid #FF6B35}
+  h3{font-size:15px;font-weight:700;color:#333;margin:18px 0 8px}
+  p{color:#555;margin-bottom:10px;font-size:14px}
+  /* ── Cards ── */
+  .card-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:4px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px 10px;text-align:center}
+  .card .ci{font-size:30px;margin-bottom:6px}
+  .card .ct{font-size:13px;font-weight:700;color:#222}
+  .card .cd{font-size:11px;color:#888;margin-top:3px}
+  /* ── Table ── */
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:4px}
+  th{background:#1B4F72;color:#fff;padding:10px 14px;font-size:13px;text-align:left}
+  td{padding:9px 14px;font-size:13px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tr:nth-child(even) td{background:#fafafa}
+  /* ── Pain blocks ── */
+  .pain{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:8px}
+  .pain-num{background:#FF6B35;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;margin-top:2px}
+  .pain-label{font-weight:700;font-size:14px;color:#222}
+  .pain-sol{font-size:13px;color:#666;margin-top:3px}
+  /* ── Rank ── */
+  .rank-row{display:flex;gap:0;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:16px}
+  .rank-cell{flex:1;text-align:center;padding:14px 6px;background:#fff;border-right:1px solid #e5e7eb;font-size:12px}
+  .rank-cell:last-child{border-right:none}
+  .rank-cell .re{font-size:24px;margin-bottom:4px}
+  .rank-cell .rn{font-weight:700;color:#1B4F72}
+  .rank-cell .rs{color:#888;font-size:11px}
+  /* ── Progress formula ── */
+  .formula{background:#1e1e2e;color:#cdd6f4;border-radius:10px;padding:16px 20px;font-family:monospace;font-size:14px;margin:12px 0}
+  .formula span{color:#a6e3a1}
+  /* ── Score items ── */
+  .score-items{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+  .score-item{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 10px;text-align:center}
+  .score-item .si{font-size:26px;margin-bottom:6px}
+  .score-item .sp{font-size:18px;font-weight:800;color:#FF6B35}
+  .score-item .sl{font-size:12px;color:#666;margin-top:2px}
+  .score-item .sc{font-size:11px;color:#888;margin-top:2px}
+  /* ── Path steps ── */
+  .path-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin:12px 0}
+  .path-item{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+  .path-arrow{font-size:20px;flex-shrink:0;margin-top:1px}
+  .path-title{font-weight:700;font-size:14px;color:#1B4F72}
+  .path-desc{font-size:13px;color:#666;margin-top:4px}
+  /* ── Achievement grid ── */
+  .ach-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+  .ach{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 6px;text-align:center}
+  .ach .ae{font-size:24px;margin-bottom:4px}
+  .ach .an{font-size:11px;font-weight:700;color:#333;line-height:1.3}
+  /* ── Lang chips ── */
+  .lang-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .lang-chip{background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:5px 12px;font-size:13px}
+  /* ── Toast preview ── */
+  .toast-preview{background:linear-gradient(90deg,#F39C12,#FF6B35);color:#fff;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;text-align:center;margin:12px 0}
+  /* ── Link box ── */
+  .link-box{background:#fff3ed;border:2px solid #FF6B35;border-radius:10px;padding:12px 16px;font-size:13px;color:#FF6B35;font-weight:600;word-break:break-all;margin:8px 0}
+  /* ── ST list ── */
+  .st-list{display:flex;flex-direction:column;gap:6px}
+  .st-item{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;display:flex;gap:10px;align-items:center;font-size:13px}
+  .st-num{background:#1B4F72;color:#fff;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700;flex-shrink:0}
+  .st-desc{color:#444}
+  footer{text-align:center;font-size:12px;color:#aaa;border-top:1px solid #e5e7eb;padding:20px;margin-top:20px}
+</style>
+</head>
+<body>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="hero-icon">🏥</div>
+  <h1>MigrantCare Kaohsiung</h1>
+  <p>多語系外籍移工與新住民求助平台<br>圖像化問診 × 勞工權益 × GPS 地標遊戲 × PWA 手機 App</p>
+</div>
+
+<div class="container">
+
+  <!-- ── 專案定位 ── -->
+  <div class="section">
+    <h2>🎯 專案定位</h2>
+    <p>為高雄市外籍移工與新住民建立一套<strong>多語系圖像化求助 + 遊戲化學習 PWA 手機 App</strong>，讓語言不通的移工在醫療、法律、生活各方面都能快速得到協助。</p>
+    <div class="lang-row">
+      <span class="lang-chip">🇹🇼 中文</span>
+      <span class="lang-chip">🇬🇧 English</span>
+      <span class="lang-chip">🇮🇩 Bahasa Indonesia</span>
+      <span class="lang-chip">🇻🇳 Tiếng Việt</span>
+      <span class="lang-chip">🇹🇭 ภาษาไทย</span>
+    </div>
+  </div>
+
+  <!-- ── 四大痛點 ── -->
+  <div class="section">
+    <h2>🔥 解決四大痛點</h2>
+    <div class="pain"><div class="pain-num">1</div><div><div class="pain-label">醫療現場語言不通</div><div class="pain-sol">→ 圖像化問診卡 + 雙語出示卡（直接給醫護人員看）</div></div></div>
+    <div class="pain"><div class="pain-num">2</div><div><div class="pain-label">勞資糾紛不知如何求助</div><div class="pain-sol">→ 情境式權益速查 + 合法判斷 + 熟悉度追蹤</div></div></div>
+    <div class="pain"><div class="pain-num">3</div><div><div class="pain-label">不知道去哪裡找資源</div><div class="pain-sol">→ 29 個地標友善機構地圖 + GPS 即時定位</div></div></div>
+    <div class="pain"><div class="pain-num">4</div><div><div class="pain-label">學習動機不足</div><div class="pain-sol">→ GPS 觸發隨機小遊戲 + 成就徽章 + 5 段排名</div></div></div>
+  </div>
+
+  <!-- ── 功能模組 ── -->
+  <div class="section">
+    <h2>📱 功能模組（10 Sub-Tasks）</h2>
+    <div class="st-list">
+      <div class="st-item"><span class="st-num">ST1</span><span class="st-desc">🌐 語系選擇頁 — 5語 Splash，localStorage 記憶</span></div>
+      <div class="st-item"><span class="st-num">ST2</span><span class="st-desc">👤 登入/註冊系統 — 暱稱 + 4位PIN，純本地帳號</span></div>
+      <div class="st-item"><span class="st-num">ST3</span><span class="st-desc">🏠 主頁 + 熟悉量表 — 圓形進度環、5段段位、遊戲開關</span></div>
+      <div class="st-item"><span class="st-num">ST4</span><span class="st-desc">💊 圖像化問診卡 — 3步驟：部位 → 症狀 → 雙語出示卡</span></div>
+      <div class="st-item"><span class="st-num">ST5</span><span class="st-desc">🏛 勞工權益速查 — 6類 × 24題，合法判斷 + 證據提醒</span></div>
+      <div class="st-item"><span class="st-num">ST6</span><span class="st-desc">🗺 友善資源地圖 — 29個地標（醫院/診所/藥局/法扶/服務中心）</span></div>
+      <div class="st-item"><span class="st-num">ST7</span><span class="st-desc">🎮 GPS地標遊戲 — 靠近地標觸發3種隨機小遊戲</span></div>
+      <div class="st-item"><span class="st-num">ST8</span><span class="st-desc">🏆 成就與排名系統 — 10個成就徽章 + 5段排名</span></div>
+      <div class="st-item"><span class="st-num">ST9</span><span class="st-desc">📱 PWA 手機App設定 — manifest + Service Worker 離線快取</span></div>
+      <div class="st-item"><span class="st-num">ST10</span><span class="st-desc">🔧 整合測試與精修 — RWD、定位修復、UI統一</span></div>
+    </div>
+  </div>
+
+  <!-- ── 三種遊戲 ── -->
+  <div class="section">
+    <h2>🎮 地標遊戲（3種隨機）</h2>
+    <div class="card-row">
+      <div class="card"><div class="ci">🃏</div><div class="ct">閃卡配對</div><div class="cd">看圖選正確中文名稱（4選1）</div></div>
+      <div class="card"><div class="ci">🚨</div><div class="ct">緊急排序</div><div class="cd">症狀依緊急程度排列（上下移）</div></div>
+      <div class="card"><div class="ci">💬</div><div class="ct">情境填空</div><div class="cd">勞工情境句子填空（3選1）</div></div>
+    </div>
+  </div>
+
+  <!-- ── 地圖地標 ── -->
+  <div class="section">
+    <h2>🗺 地圖地標分類（共 29 個）</h2>
+    <table>
+      <tr><th>類型</th><th>顏色</th><th>數量</th></tr>
+      <tr><td>🏥 大型醫院</td><td>🔵 藍色</td><td>9 間</td></tr>
+      <tr><td>🩺 診所／衛生所</td><td>🟣 紫色</td><td>8 間</td></tr>
+      <tr><td>💊 友善藥局</td><td>🩷 粉色</td><td>4 間</td></tr>
+      <tr><td>⚖️ 法律扶助基金會</td><td>🟢 綠色</td><td>3 處</td></tr>
+      <tr><td>🏠 新住民服務中心</td><td>🟠 橘色</td><td>5 處</td></tr>
+    </table>
+  </div>
+
+  <!-- ── 成就系統 ── -->
+  <div class="section">
+    <h2>🏆 成就系統（10個）</h2>
+    <div class="ach-grid">
+      <div class="ach"><div class="ae">🎮</div><div class="an">初次挑戰</div></div>
+      <div class="ach"><div class="ae">💊</div><div class="an">問診初體驗</div></div>
+      <div class="ach"><div class="ae">📖</div><div class="an">權益探索者</div></div>
+      <div class="ach"><div class="ae">🏛</div><div class="an">權益達人</div></div>
+      <div class="ach"><div class="ae">📍</div><div class="an">探索者</div></div>
+      <div class="ach"><div class="ae">🗺</div><div class="an">地圖達人</div></div>
+      <div class="ach"><div class="ae">🌳</div><div class="an">穩健成長</div></div>
+      <div class="ach"><div class="ae">🏆</div><div class="an">頂尖達人</div></div>
+      <div class="ach"><div class="ae">🔥</div><div class="an">連續挑戰</div></div>
+      <div class="ach"><div class="ae">⭐</div><div class="an">完美作答</div></div>
+    </div>
+  </div>
+
+  <!-- ── 段位排名 ── -->
+  <div class="section">
+    <h2>🌱 段位排名（5段）</h2>
+    <div class="rank-row">
+      <div class="rank-cell"><div class="re">🌱</div><div class="rn">新芽</div><div class="rs">0–19分</div></div>
+      <div class="rank-cell"><div class="re">🌿</div><div class="rn">成長</div><div class="rs">20–39分</div></div>
+      <div class="rank-cell"><div class="re">🌳</div><div class="rn">穩健</div><div class="rs">40–59分</div></div>
+      <div class="rank-cell"><div class="re">⭐</div><div class="rn">熟練</div><div class="rs">60–79分</div></div>
+      <div class="rank-cell"><div class="re">🏆</div><div class="rn">達人</div><div class="rs">80–100分</div></div>
+    </div>
+
+    <h3>🧮 分數計算公式</h3>
+    <div class="formula">熟悉度分數 = <span>勞工進度(50%)</span> + <span>問診使用(20%)</span> + <span>地標遊戲(30%)</span></div>
+
+    <div class="score-items">
+      <div class="score-item"><div class="si">🏛</div><div class="sp">50%</div><div class="sl">勞工權益速查</div><div class="sc">讀完24題滿分<br>每題 +2.08分</div></div>
+      <div class="score-item"><div class="si">💊</div><div class="sp">20%</div><div class="sl">問診卡使用</div><div class="sc">使用10次滿分<br>每次 +2分</div></div>
+      <div class="score-item"><div class="si">🎮</div><div class="sp">30%</div><div class="sl">地標遊戲</div><div class="sc">訪問10個滿分<br>每個 +3分</div></div>
+    </div>
+
+    <h3>📈 具體升段路徑</h3>
+    <ul class="path-list">
+      <li class="path-item"><div class="path-arrow">🌱→🌿</div><div><div class="path-title">達到 20 分</div><div class="path-desc">讀 10 題勞工問答（+20分）即可升段</div></div></li>
+      <li class="path-item"><div class="path-arrow">🌿→🌳</div><div><div class="path-title">達到 40 分</div><div class="path-desc">再讀 10 題（+20分）+ 問診卡 5 次（+10分）+ 訪問 3 個地標（+9分）</div></div></li>
+      <li class="path-item"><div class="path-arrow">🌳→⭐</div><div><div class="path-title">達到 60 分</div><div class="path-desc">讀完全部 24 題（+48分）+ 訪問 4 個地標（+12分）</div></div></li>
+      <li class="path-item"><div class="path-arrow">⭐→🏆</div><div><div class="path-title">達到 80 分</div><div class="path-desc">三項全滿：讀完 24 題 + 用問診卡 10 次 + 訪問 10 個地標</div></div></li>
+    </ul>
+
+    <h3>🎯 升段觸發機制</h3>
+    <p style="font-size:13px">每次以下動作後系統自動偵測升段：</p>
+    <table>
+      <tr><th>動作</th><th>觸發函式</th></tr>
+      <tr><td>展開勞工問答題目</td><td><code>markQuestionRead()</code></td></tr>
+      <tr><td>生成問診出示卡</td><td><code>generateMedCard()</code></td></tr>
+      <tr><td>完成地標遊戲</td><td><code>submitAnswer()</code></td></tr>
+    </table>
+    <div class="toast-preview">🎉 恭喜升段！⭐ 熟練 Skilled</div>
+  </div>
+
+  <!-- ── 網站連結 ── -->
+  <div class="section">
+    <h2>🔗 網站與分支</h2>
+    <table>
+      <tr><th>項目</th><th>說明</th></tr>
+      <tr><td>🌐 線上網站</td><td><a href="https://54987-web.github.io/Hello-world/" target="_blank" style="color:#FF6B35">https://54987-web.github.io/Hello-world/</a></td></tr>
+      <tr><td>📁 主分支</td><td>main</td></tr>
+      <tr><td>🛠 開發分支</td><td>feature/涂祐-技術開發</td></tr>
+    </table>
+  </div>
+
+</div>
+<footer>MigrantCare Kaohsiung 說明書 — Made with IBM Bob</footer>
+</body>
+</html>
