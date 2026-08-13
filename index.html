@@ -3907,59 +3907,70 @@
      */
     function locateMe() {
       if (!navigator.geolocation) {
-        alert(t('mapOffline'));
+        _showLocateError('此裝置不支援定位 / Geolocation not supported');
         return;
       }
       const btn = document.getElementById('map-locate-btn');
-      if (btn) { btn.disabled = true; btn.style.opacity = '.7'; }
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ <span>定位中…</span>';
+      }
 
-      navigator.geolocation.getCurrentPosition(
-        function(pos) {
-          if (btn) { btn.disabled = false; btn.style.opacity = ''; }
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
+      function onSuccess(pos) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '📍 <span data-i18n="mapLocateBtn">定位我的位置</span>';
+        }
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (!_mapState.map) return;
+        _mapState.map.flyTo([lat, lng], 14, { duration: 1 });
+        if (_mapState.userMarker) _mapState.map.removeLayer(_mapState.userMarker);
+        _mapState.userMarker = L.marker([lat, lng], { icon: _makeUserIcon(), zIndexOffset: 1000 })
+          .addTo(_mapState.map).bindPopup('📍 你的位置').openPopup();
+        const user = getCurrentUser();
+        if (user) {
+          saveUserData(user.id, { lastLocation: { lat, lng, timestamp: Date.now() } });
+          renderFamiliarityChart();
+        }
+        const sorted = LOCATIONS
+          .map(loc => ({ loc, dist: _distKm(lat, lng, loc.lat, loc.lng) }))
+          .sort((a, b) => a.dist - b.dist).slice(0, 3);
+        renderLocationList(_mapState.currentFilter, new Set(sorted.map(x => x.loc.id)));
+        const listEl = document.getElementById('map-location-list');
+        if (listEl) listEl.scrollTop = 0;
+      }
 
-          if (!_mapState.map) return;
+      function onError(err) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '📍 <span data-i18n="mapLocateBtn">定位我的位置</span>';
+        }
+        const msgs = {
+          1: '❌ 定位被拒絕，請到手機「設定 → 隱私 → 位置服務」允許瀏覽器存取位置\nPermission denied – enable Location in Settings',
+          2: '❌ 無法取得位置，請確認 GPS 已開啟\nPosition unavailable – check GPS',
+          3: '❌ 定位逾時，請重試\nTimeout – please try again'
+        };
+        _showLocateError(msgs[err.code] || '❌ 定位失敗，請重試');
+      }
 
-          // 跳至使用者位置
-          _mapState.map.flyTo([lat, lng], 14, { duration: 1 });
+      // 先用低精度快速嘗試（手機相容性較好），成功後再精確
+      navigator.geolocation.getCurrentPosition(onSuccess, function(err) {
+        // 低精度失敗，再試一次高精度
+        navigator.geolocation.getCurrentPosition(onSuccess, onError,
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+      }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 });
+    }
 
-          // 移除舊 userMarker，建立新的
-          if (_mapState.userMarker) _mapState.map.removeLayer(_mapState.userMarker);
-          _mapState.userMarker = L.marker([lat, lng], { icon: _makeUserIcon(), zIndexOffset: 1000 })
-            .addTo(_mapState.map)
-            .bindPopup('📍 你的位置')
-            .openPopup();
-
-          // 儲存至 user.lastLocation
-          const user = getCurrentUser();
-          if (user) {
-            saveUserData(user.id, {
-              lastLocation: { lat, lng, timestamp: Date.now() }
-            });
-            // 更新首頁最近位置
-            renderFamiliarityChart();
-          }
-
-          // 計算最近 3 個機構
-          const sorted = LOCATIONS
-            .map(loc => ({ loc, dist: _distKm(lat, lng, loc.lat, loc.lng) }))
-            .sort((a, b) => a.dist - b.dist)
-            .slice(0, 3);
-
-          const nearbyIds = new Set(sorted.map(x => x.loc.id));
-          renderLocationList(_mapState.currentFilter, nearbyIds);
-
-          // 滾到列表頂部
-          const listEl = document.getElementById('map-location-list');
-          if (listEl) listEl.scrollTop = 0;
-        },
-        function() {
-          if (btn) { btn.disabled = false; btn.style.opacity = ''; }
-          alert(t('mapOffline'));
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-      );
+    function _showLocateError(msg) {
+      // 顯示在地圖下方，不用 alert
+      const listEl = document.getElementById('map-location-list');
+      if (listEl) {
+        listEl.insertAdjacentHTML('afterbegin',
+          `<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;
+            padding:12px 16px;margin:8px;font-size:13px;line-height:1.6;white-space:pre-wrap;">${msg}</div>`);
+        listEl.scrollTop = 0;
+      }
     }
 
     /* ═══════════════════════════════════════════════════════════
