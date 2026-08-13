@@ -1607,6 +1607,35 @@
       color: var(--color-navy);
       font-weight: 600;
     }
+    .location-card-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .loc-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: .75rem;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .loc-btn-call {
+      background: #fff3ed;
+      color: #FF6B35;
+      border: 1px solid #FF6B35;
+    }
+    .loc-btn-nav {
+      background: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #22c55e;
+    }
+    .loc-btn-nav:hover { background: #22c55e; color: #fff; }
+    .loc-btn-call:hover { background: #FF6B35; color: #fff; }
     .map-nearby-label {
       font-size: .75rem;
       font-weight: 700;
@@ -3787,15 +3816,25 @@
           background:rgba(0,0,0,.07);font-size:.7rem;font-weight:700;margin:1px;">${l.toUpperCase()}</span>`
       ).join('');
 
+      const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}&travelmode=walking`;
+      const gmapUrl = `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`;
       return `
-        <div style="min-width:200px;font-family:var(--font-main);">
+        <div style="min-width:210px;font-family:var(--font-main);">
           <div style="font-size:.92rem;font-weight:800;color:${cfg.color || '#333'};margin-bottom:.3rem;">${name}</div>
           <div style="font-size:.76rem;color:#555;margin-bottom:.25rem;">📍 ${loc.address}</div>
           <div style="font-size:.76rem;color:#555;margin-bottom:.3rem;">🕐 ${loc.hours}</div>
-          <div style="margin-bottom:.35rem;">${langBadges}</div>
-          <a href="tel:${loc.phone}" style="display:inline-block;padding:.3rem .75rem;
-            background:${cfg.color || '#2B6CB0'};color:#fff;border-radius:8px;
-            font-size:.82rem;font-weight:700;text-decoration:none;">📞 ${loc.phone}</a>
+          <div style="margin-bottom:.5rem;">${langBadges}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <a href="tel:${loc.phone}" style="flex:1;min-width:80px;display:inline-block;padding:.35rem .6rem;
+              background:${cfg.color || '#2B6CB0'};color:#fff;border-radius:8px;
+              font-size:.8rem;font-weight:700;text-decoration:none;text-align:center;">📞 撥打</a>
+            <a href="${navUrl}" target="_blank" style="flex:1;min-width:80px;display:inline-block;padding:.35rem .6rem;
+              background:#22c55e;color:#fff;border-radius:8px;
+              font-size:.8rem;font-weight:700;text-decoration:none;text-align:center;">🧭 導航</a>
+            <a href="${gmapUrl}" target="_blank" style="flex:1;min-width:80px;display:inline-block;padding:.35rem .6rem;
+              background:#3b82f6;color:#fff;border-radius:8px;
+              font-size:.8rem;font-weight:700;text-decoration:none;text-align:center;">🗺 地圖</a>
+          </div>
         </div>`;
     }
 
@@ -3961,6 +4000,7 @@
       const name = loc.names[lang] || loc.names.zh;
       const nearbyBadge = isNearby
         ? `<span class="location-card-nearby-badge">📍 近</span>` : '';
+      const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}&travelmode=walking`;
       return `
         <div class="location-card${isNearby ? ' nearby' : ''}" data-loc-id="${loc.id}">
           <div class="location-card-stripe stripe-${loc.type}"></div>
@@ -3970,7 +4010,10 @@
               ${nearbyBadge}
             </div>
             <div class="location-card-address">📍 ${loc.address}</div>
-            <div class="location-card-phone">📞 ${loc.phone}</div>
+            <div class="location-card-actions">
+              <a href="tel:${loc.phone}" class="loc-btn loc-btn-call" onclick="event.stopPropagation()">📞 ${loc.phone}</a>
+              <a href="${navUrl}" target="_blank" class="loc-btn loc-btn-nav" onclick="event.stopPropagation()">🧭 導航前往</a>
+            </div>
           </div>
         </div>`;
     }
