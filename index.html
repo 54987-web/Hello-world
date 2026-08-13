@@ -1,0 +1,4518 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FF6B35" />
+  <title>MigrantCare Kaohsiung</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MigrantCare">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <style>
+    /* ===== PWA 專用樣式 ===== */
+    .offline-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #333;
+      color: #fff;
+      text-align: center;
+      font-size: 13px;
+      padding: 6px 12px;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+    }
+    .offline-banner.hidden { display: none; }
+
+    .ios-tip {
+      margin: 16px auto 0;
+      max-width: 320px;
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .ios-tip.hidden { display: none; }
+
+    /* ===== CSS 變數 ===== */
+    :root {
+      --color-primary:   #FF6B35;
+      --color-primary-d: #E55A24;
+      --color-navy:      #1B4F72;
+      --color-navy-d:    #154260;
+      --color-bg:        #F8FAFC;
+      --color-surface:   #FFFFFF;
+      --color-border:    #E2E8F0;
+      --color-text:      #1A202C;
+      --color-muted:     #718096;
+      --color-success:   #38A169;
+      --color-danger:    #E53E3E;
+
+      --radius-card:  16px;
+      --radius-btn:   12px;
+      --shadow-card:  0 2px 12px rgba(0,0,0,.10);
+      --shadow-btn:   0 4px 14px rgba(255,107,53,.35);
+
+      --font-main: -apple-system, "Noto Sans TC", "Noto Sans", "Segoe UI",
+                   "Helvetica Neue", Arial, sans-serif;
+      --transition: .18s ease;
+    }
+
+    /* ===== Reset ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: var(--font-main);
+      background: var(--color-bg);
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;           /* 各 screen 各自捲動 */
+    }
+
+    /* ===== 通用 Screen 容器 ===== */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: opacity var(--transition), transform var(--transition);
+    }
+    .screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(24px);
+    }
+
+    /* ===== 通用按鈕 ===== */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .45rem;
+      padding: .85rem 1.6rem;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      box-shadow: var(--shadow-btn);
+      transition: background var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-primary:active { transform: scale(.96); background: var(--color-primary-d); }
+
+    /* ========================================================
+       #lang-screen — 全螢幕語系選擇 Splash
+    ======================================================== */
+    #lang-screen {
+      background: linear-gradient(160deg, var(--color-navy) 0%, #2874A6 55%, #1A5276 100%);
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1.25rem 2.5rem;
+      gap: 0;
+    }
+
+    .lang-logo {
+      font-size: 3rem;
+      margin-bottom: .5rem;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,.3));
+    }
+
+    .lang-title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      text-align: center;
+      margin-bottom: .35rem;
+      letter-spacing: .03em;
+    }
+
+    .lang-subtitle {
+      font-size: .85rem;
+      color: rgba(255,255,255,.7);
+      text-align: center;
+      margin-bottom: 2rem;
+      data-i18n: "";
+    }
+
+    /* 語言卡片格狀排列（2列） */
+    .lang-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .85rem;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* 第 5 張卡片置中 */
+    .lang-grid .lang-card:nth-child(5) {
+      grid-column: 1 / -1;
+      max-width: calc(50% - .43rem);
+      justify-self: center;
+    }
+
+    .lang-card {
+      background: rgba(255,255,255,.12);
+      border: 1.5px solid rgba(255,255,255,.22);
+      border-radius: var(--radius-card);
+      padding: 1.1rem .9rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .4rem;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: transform var(--transition), background var(--transition), border-color var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .lang-card:hover {
+      background: rgba(255,255,255,.2);
+      border-color: rgba(255,255,255,.45);
+    }
+    .lang-card:active {
+      transform: scale(.93);
+      background: rgba(255,107,53,.4);
+      border-color: var(--color-primary);
+    }
+    .lang-card.selected {
+      background: rgba(255,107,53,.35);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(255,107,53,.45);
+    }
+
+    .lang-flag   { font-size: 2.4rem; line-height: 1; }
+    .lang-native { font-size: 1rem; font-weight: 700; color: #FFFFFF; text-align: center; }
+    .lang-zh     { font-size: .75rem; color: rgba(255,255,255,.65); margin-top: .05rem; }
+
+    /* ========================================================
+       #auth-screen — 登入頁
+    ======================================================== */
+    #auth-screen {
+      background: var(--color-bg);
+      padding: 1.5rem 1.25rem 2rem;
+      gap: 0;
+    }
+
+    .auth-header {
+      text-align: center;
+      padding: 1.5rem 0 1.2rem;
+    }
+    .auth-header .auth-logo { font-size: 2.6rem; margin-bottom: .4rem; }
+    .auth-header h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--color-navy);
+      margin-bottom: .25rem;
+    }
+    .auth-header p {
+      font-size: .85rem;
+      color: var(--color-muted);
+    }
+
+    /* 使用者卡片列表 */
+    .user-list-label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--color-muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin: 1rem 0 .55rem;
+    }
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: .65rem;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .85rem 1rem;
+      cursor: pointer;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      min-height: 64px;
+    }
+    .user-card:hover  { border-color: var(--color-primary); box-shadow: var(--shadow-card); }
+    .user-card:active { transform: scale(.97); }
+
+    .user-card-avatar {
+      font-size: 2rem;
+      width: 2.6rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .user-card-info { flex: 1; min-width: 0; }
+    .user-card-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-card-identity {
+      font-size: .78rem;
+      color: var(--color-muted);
+      margin-top: .1rem;
+    }
+    .user-card-arrow {
+      font-size: 1.1rem;
+      color: var(--color-muted);
+      flex-shrink: 0;
+    }
+
+    /* 首次無帳號提示 */
+    .auth-empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--color-muted);
+      font-size: .9rem;
+    }
+    .auth-empty .auth-empty-icon { font-size: 2.8rem; margin-bottom: .6rem; }
+
+    /* 新增使用者按鈕 */
+    .btn-add-user {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      width: 100%;
+      max-width: 480px;
+      margin: .85rem auto 0;
+      padding: .9rem 1.4rem;
+      background: transparent;
+      color: var(--color-primary);
+      border: 2px dashed var(--color-primary);
+      border-radius: var(--radius-card);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 52px;
+      transition: background var(--transition), color var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-add-user:hover  { background: rgba(255,107,53,.08); }
+    .btn-add-user:active { background: rgba(255,107,53,.18); transform: scale(.97); }
+
+    /* ========================================================
+       PIN 輸入 Modal
+    ======================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-sheet {
+      background: var(--color-surface);
+      border-radius: 22px 22px 0 0;
+      padding: 1.4rem 1.25rem 2rem;
+      width: 100%;
+      max-width: 480px;
+      transform: translateY(100%);
+      transition: transform .25s cubic-bezier(.32,.72,0,1);
+    }
+    .modal-overlay.open .modal-sheet { transform: translateY(0); }
+
+    .modal-drag { width: 40px; height: 4px; background: var(--color-border); border-radius: 2px; margin: 0 auto .9rem; }
+
+    .pin-modal-user {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.2rem;
+    }
+    .pin-modal-avatar { font-size: 2rem; }
+    .pin-modal-name   { font-size: 1rem; font-weight: 600; color: var(--color-text); }
+    .pin-modal-hint   { font-size: .82rem; color: var(--color-muted); margin-top: .05rem; }
+
+    /* PIN 顯示點 */
+    .pin-dots {
+      display: flex;
+      gap: .75rem;
+      justify-content: center;
+      margin-bottom: 1.2rem;
+    }
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--color-border);
+      background: transparent;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .pin-dot.filled {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    /* PIN 錯誤訊息 */
+    .pin-error {
+      text-align: center;
+      font-size: .85rem;
+      color: var(--color-danger);
+      min-height: 1.2em;
+      margin-bottom: .6rem;
+    }
+
+    /* 3×4 數字鍵盤 */
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .55rem;
+    }
+    .pin-key {
+      background: var(--color-bg);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-btn);
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--color-text);
+      padding: 0;
+      height: 56px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: background var(--transition), transform var(--transition);
+      user-select: none;
+    }
+    .pin-key:active { background: var(--color-border); transform: scale(.93); }
+    .pin-key.key-del { color: var(--color-muted); font-size: 1.1rem; }
+    .pin-key.key-empty { visibility: hidden; pointer-events: none; }
+
+    /* ========================================================
+       #register-screen — 註冊頁
+    ======================================================== */
+    #register-screen {
+      background: var(--color-bg);
+      padding: 1.5rem 1.25rem 3rem;
+      gap: 0;
+    }
+
+    .register-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.4rem;
+    }
+    .btn-back {
+      background: transparent;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: .3rem .5rem;
+      border-radius: 8px;
+      color: var(--color-navy);
+      -webkit-tap-highlight-color: transparent;
+      transition: background var(--transition);
+    }
+    .btn-back:active { background: var(--color-border); }
+    .register-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-navy);
+    }
+
+    /* 表單標籤 */
+    .form-section { margin-bottom: 1.35rem; }
+    .form-label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--color-muted);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-bottom: .5rem;
+    }
+    .form-input {
+      width: 100%;
+      padding: .78rem 1rem;
+      font-size: 1rem;
+      font-family: var(--font-main);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-btn);
+      background: var(--color-surface);
+      color: var(--color-text);
+      outline: none;
+      transition: border-color var(--transition);
+      min-height: 48px;
+    }
+    .form-input:focus { border-color: var(--color-primary); }
+
+    /* 身份大按鈕 */
+    .identity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: .55rem;
+    }
+    .identity-btn {
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .8rem .5rem;
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--color-text);
+      cursor: pointer;
+      text-align: center;
+      min-height: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .25rem;
+      transition: border-color var(--transition), background var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .identity-btn .identity-icon { font-size: 1.5rem; }
+    .identity-btn:active { transform: scale(.96); }
+    .identity-btn.selected {
+      border-color: var(--color-primary);
+      background: rgba(255,107,53,.08);
+      color: var(--color-primary);
+    }
+
+    /* 頭像格 */
+    .avatar-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+    }
+    .avatar-btn {
+      width: calc((100% - 3.3rem) / 7);
+      min-width: 40px;
+      aspect-ratio: 1;
+      font-size: 1.55rem;
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .avatar-btn.selected {
+      border-color: var(--color-primary);
+      background: rgba(255,107,53,.1);
+      transform: scale(1.12);
+    }
+    .avatar-btn:active { transform: scale(.92); }
+
+    /* 註冊頁 PIN 鍵盤（嵌入式） */
+    .register-pin-dots {
+      display: flex;
+      gap: .75rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .register-pin-error {
+      text-align: center;
+      font-size: .82rem;
+      color: var(--color-danger);
+      min-height: 1.2em;
+      margin-bottom: .5rem;
+    }
+
+    /* 完成按鈕 */
+    .btn-done {
+      width: 100%;
+      padding: .95rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-top: .5rem;
+      border-radius: var(--radius-btn);
+      min-height: 52px;
+    }
+
+    /* ========================================================
+       #main-screen — Sub-Task 3
+    ======================================================== */
+
+    /* ---- 主頁骨架 ---- */
+    #main-screen {
+      background: var(--color-bg);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* ---- Header ---- */
+    .main-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--color-surface);
+      border-bottom: 1.5px solid var(--color-border);
+      padding: .6rem 1rem;
+      min-height: 52px;
+    }
+    .main-header-brand {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      letter-spacing: -.3px;
+    }
+    .main-header-right {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .main-header-user {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: .3rem .5rem;
+      border-radius: 50px;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--color-text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .main-header-user:active { background: var(--color-border); }
+    .main-header-user-avatar { font-size: 1.45rem; line-height: 1; }
+    .main-header-lang {
+      background: none;
+      border: 1.5px solid var(--color-border);
+      border-radius: 50px;
+      padding: .25rem .6rem;
+      font-size: .88rem;
+      cursor: pointer;
+      color: var(--color-muted);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .main-header-lang:active { border-color: var(--color-primary); color: var(--color-primary); }
+
+    /* ---- 中間可捲動區域 ---- */
+    .main-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      /* 底部 Tab Bar 高度 + 緊急按鈕空間 */
+      padding-bottom: 80px;
+    }
+
+    /* ---- View 切換 ---- */
+    .main-view { display: none; }
+    .main-view.active { display: block; }
+
+    /* ---- Tab Bar ---- */
+    .tab-bar {
+      position: sticky;
+      bottom: 0;
+      z-index: 50;
+      display: flex;
+      background: var(--color-surface);
+      border-top: 1.5px solid var(--color-border);
+      height: 60px;
+    }
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .15rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      color: var(--color-muted);
+      font-size: .7rem;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition: color var(--transition);
+    }
+    .tab-btn-icon { font-size: 1.35rem; line-height: 1; }
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20%;
+      right: 20%;
+      height: 3px;
+      border-radius: 2px 2px 0 0;
+      background: var(--color-primary);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .tab-btn.active { color: var(--color-primary); font-weight: 700; }
+    .tab-btn.active::after { opacity: 1; }
+
+    /* ---- Home View ---- */
+    .home-section {
+      padding: 1rem 1rem 0;
+    }
+
+    /* 圓形進度環 */
+    .familiarity-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.2rem 1rem .8rem;
+    }
+    .familiarity-ring {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--color-primary) 0deg,
+        var(--color-primary) calc(var(--ring-pct, 0) * 3.6deg),
+        var(--color-border)  calc(var(--ring-pct, 0) * 3.6deg)
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .familiarity-ring-inner {
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: var(--color-surface);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .familiarity-score-num {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      line-height: 1;
+    }
+    .familiarity-score-unit { font-size: .8rem; color: var(--color-muted); margin-top: .1rem; }
+
+    /* 段位徽章 */
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      margin-top: .75rem;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-primary);
+      border-radius: 50px;
+      padding: .3rem .9rem;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    /* 分項統計 */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .6rem;
+      padding: .5rem 1rem;
+    }
+    .stat-card {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .75rem .5rem;
+      text-align: center;
+    }
+    .stat-card-icon { font-size: 1.35rem; margin-bottom: .25rem; }
+    .stat-card-label { font-size: .7rem; color: var(--color-muted); margin-bottom: .15rem; }
+    .stat-card-value { font-size: .85rem; font-weight: 700; color: var(--color-text); }
+
+    /* 遊戲 Toggle */
+    .game-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .8rem 1rem;
+      margin: .5rem 1rem;
+    }
+    .game-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      font-size: .95rem;
+      font-weight: 600;
+    }
+    /* 滑動開關 */
+    .toggle-switch {
+      position: relative;
+      width: 46px;
+      height: 26px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--color-border);
+      border-radius: 26px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* 快速入口 */
+    .quick-entry-title {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: .5rem 1rem .2rem;
+    }
+    .quick-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .6rem;
+      padding: .25rem 1rem .5rem;
+    }
+    .quick-card {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .85rem .4rem;
+      text-align: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .quick-card:active { border-color: var(--color-primary); box-shadow: var(--shadow-card); }
+    .quick-card-icon { font-size: 1.6rem; margin-bottom: .3rem; }
+    .quick-card-label { font-size: .75rem; font-weight: 600; color: var(--color-text); }
+
+    /* 最近位置 */
+    .location-row {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .7rem 1rem;
+      margin: .5rem 1rem 1rem;
+      font-size: .88rem;
+      color: var(--color-muted);
+    }
+
+    /* ---- 緊急浮動按鈕群組 ---- */
+    .emergency-fab {
+      position: fixed;
+      right: 1rem;
+      bottom: 72px;   /* Tab Bar 60px + 12px margin */
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+    }
+    .fab-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: none;
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0,0,0,.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+      -webkit-tap-highlight-color: transparent;
+      text-decoration: none;
+    }
+    .fab-119  { background: var(--color-danger); }
+    .fab-1955 { background: var(--color-primary); }
+    .fab-btn:active { opacity: .85; transform: scale(.93); }
+
+    /* ── 問診卡 #symptom-view ── */
+    .symptom-view-inner {
+      padding: .9rem .9rem 6rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    /* 步驟進度條 */
+    .symptom-steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      margin-bottom: 1.1rem;
+    }
+    .symptom-step-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--color-border);
+      transition: background .2s;
+    }
+    .symptom-step-dot.active { background: var(--color-primary); }
+    .symptom-step-line {
+      flex: 1; max-width: 48px; height: 2px;
+      background: var(--color-border);
+    }
+    /* 步驟標題 */
+    .symptom-step-title {
+      font-size: .88rem;
+      font-weight: 700;
+      color: var(--color-muted);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    /* 部位卡片格線 */
+    .body-part-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .65rem;
+      margin-bottom: 1.2rem;
+    }
+    .body-part-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .35rem;
+      padding: .85rem .5rem;
+      border: 2px solid var(--color-border);
+      border-radius: 14px;
+      background: var(--color-surface);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .body-part-card:active { transform: scale(.96); }
+    .body-part-card.selected {
+      border-color: var(--color-primary);
+      background: rgba(255,107,53,.08);
+    }
+    .body-part-card .bp-emoji { font-size: 2.2rem; line-height: 1; }
+    .body-part-card .bp-name  { font-size: .85rem; font-weight: 700; color: var(--color-text); text-align: center; }
+    .body-part-card.span2 { grid-column: 1 / -1; }
+    /* 症狀小標 */
+    .symptom-group-label {
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin: .9rem 0 .5rem;
+    }
+    /* 症狀卡片格線 */
+    .symptom-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .6rem;
+      margin-bottom: .4rem;
+    }
+    .symptom-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .3rem;
+      padding: .75rem .5rem;
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      background: var(--color-surface);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .symptom-card:active { transform: scale(.96); }
+    .symptom-card.selected {
+      border-color: var(--color-primary);
+      background: rgba(255,107,53,.08);
+    }
+    .symptom-card.disabled {
+      opacity: .45;
+      pointer-events: none;
+    }
+    .symptom-card .sc-emoji  { font-size: 1.7rem; line-height: 1; }
+    .symptom-card .sc-name   { font-size: .8rem; font-weight: 700; color: var(--color-text); text-align: center; }
+    .symptom-card .sc-urgent {
+      position: absolute;
+      top: 4px; right: 6px;
+      font-size: .85rem;
+      line-height: 1;
+    }
+    /* 已選計數 */
+    .symptom-count-hint {
+      text-align: right;
+      font-size: .78rem;
+      color: var(--color-muted);
+      margin-bottom: .7rem;
+    }
+    /* 步驟底部按鈕列 */
+    .symptom-btn-row {
+      display: flex;
+      gap: .6rem;
+      margin-top: .9rem;
+    }
+    .symptom-btn-row .btn-primary { flex: 1; }
+    .btn-outline {
+      flex: 1;
+      padding: .75rem 1rem;
+      border-radius: 14px;
+      border: 2px solid var(--color-primary);
+      background: transparent;
+      color: var(--color-primary);
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-outline:active { background: rgba(255,107,53,.1); transform: scale(.97); }
+    .btn-outline:disabled { opacity: .45; pointer-events: none; }
+    .btn-primary:disabled { opacity: .45; pointer-events: none; }
+
+    /* ── 出示卡 Modal #card-modal ── */
+    #card-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,.55);
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+    }
+    #card-modal.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .card-modal-sheet {
+      width: 100%;
+      max-height: 92vh;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      padding: 1.2rem 1.1rem 2rem;
+      overflow-y: auto;
+      transform: translateY(40px);
+      transition: transform .25s;
+    }
+    #card-modal.open .card-modal-sheet { transform: translateY(0); }
+    .card-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .8rem;
+    }
+    .card-modal-title {
+      font-size: .82rem;
+      color: var(--color-muted);
+      flex: 1;
+    }
+    .card-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: var(--color-muted);
+      padding: .2rem .4rem;
+    }
+    .med-card-block {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: 14px;
+      padding: 1rem 1.1rem;
+      margin-bottom: .8rem;
+    }
+    .med-card-block-label {
+      font-size: .7rem;
+      color: var(--color-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: .45rem;
+    }
+    .med-card-content {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.5;
+    }
+    .med-card-divider {
+      border: none;
+      border-top: 1.5px dashed var(--color-border);
+      margin: .7rem 0;
+    }
+    .med-card-urgent {
+      background: #fff0f0;
+      border: 1.5px solid #ff4d4d;
+      border-radius: 12px;
+      padding: .7rem 1rem;
+      color: #c0392b;
+      font-weight: 700;
+      font-size: .92rem;
+      text-align: center;
+      margin-bottom: .8rem;
+    }
+    .card-modal-btns {
+      display: flex;
+      gap: .6rem;
+      margin-top: .6rem;
+    }
+    .card-modal-btns .btn-primary { flex: 1; }
+    .card-modal-btns .btn-outline  { flex: 1; }
+
+    /* 語系切換按鈕（auth/register 時右上角） */
+    #btn-switch-lang {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      padding: .5rem .9rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-btn);
+      z-index: 100;
+      display: none;
+      transition: background var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    #btn-switch-lang:active { background: var(--color-primary-d); }
+
+    /* ========================================================
+       #labor-view — 勞工權益速查（Sub-Task 5）
+    ======================================================== */
+
+    /* 外層內距 */
+    .labor-view-inner {
+      padding: .9rem .9rem 6rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* 頁面標題列 */
+    .labor-view-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: .9rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    /* ── 第一層：分類格狀 ── */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .75rem;
+    }
+
+    .category-card {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: 1.1rem .7rem .9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .3rem;
+      cursor: pointer;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .category-card:hover  { border-color: var(--color-primary); box-shadow: var(--shadow-card); }
+    .category-card:active { transform: scale(.95); }
+
+    .category-card-emoji {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+    .category-card-name {
+      font-size: .92rem;
+      font-weight: 700;
+      color: var(--color-text);
+      text-align: center;
+    }
+    .category-card-count {
+      font-size: .72rem;
+      color: var(--color-muted);
+      background: var(--color-bg);
+      border-radius: 20px;
+      padding: .15rem .55rem;
+      font-weight: 600;
+      margin-top: .1rem;
+    }
+
+    /* ── 麵包屑 ── */
+    .labor-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .85rem;
+      color: var(--color-muted);
+      margin-bottom: 1rem;
+    }
+    .labor-breadcrumb-root {
+      cursor: pointer;
+      color: var(--color-primary);
+      font-weight: 600;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .labor-breadcrumb-root:hover { text-decoration: underline; }
+    .labor-breadcrumb-sep { color: var(--color-border); font-size: .8rem; }
+    .labor-breadcrumb-current {
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    /* ── 第二層：問題列表手風琴 ── */
+    .question-list {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+    }
+
+    .question-item {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      transition: border-color var(--transition);
+    }
+    .question-item.open { border-color: var(--color-primary); }
+
+    .question-header {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .85rem 1rem;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      min-height: 56px;
+    }
+    .question-header:active { background: var(--color-bg); }
+
+    .question-header-text {
+      flex: 1;
+      font-size: .92rem;
+      font-weight: 600;
+      color: var(--color-text);
+      line-height: 1.4;
+    }
+    .question-read-badge {
+      font-size: .7rem;
+      color: var(--color-success);
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .question-chevron {
+      font-size: .85rem;
+      color: var(--color-muted);
+      flex-shrink: 0;
+      transition: transform var(--transition);
+      line-height: 1;
+    }
+    .question-item.open .question-chevron { transform: rotate(90deg); }
+
+    .question-content {
+      display: none;
+      padding: 0 1rem 1rem;
+    }
+    .question-item.open .question-content { display: block; }
+
+    /* 合法判斷 badge */
+    .legal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      font-size: .8rem;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: .25rem .75rem;
+      margin-bottom: .75rem;
+    }
+    .legal-badge.legal   { background: #e6f4ea; color: #2d7a3a; border: 1px solid #a8d5b0; }
+    .legal-badge.illegal { background: #fde8e8; color: #c0392b; border: 1px solid #f5a8a8; }
+    .legal-badge.check   { background: #fff3e0; color: #b45309; border: 1px solid #fcd5a0; }
+
+    /* 法規說明 */
+    .question-answer {
+      font-size: .88rem;
+      color: var(--color-text);
+      line-height: 1.65;
+      margin-bottom: .85rem;
+    }
+
+    /* 證據收集提醒框 */
+    .evidence-box {
+      background: #fffde7;
+      border: 1.5px solid #f9c74f;
+      border-left: 4px solid #f9c74f;
+      border-radius: 10px;
+      padding: .7rem .85rem;
+      margin-bottom: .85rem;
+      font-size: .82rem;
+      color: #7a5800;
+      line-height: 1.55;
+    }
+    .evidence-box-title {
+      font-weight: 700;
+      margin-bottom: .3rem;
+    }
+    .evidence-list {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+    .evidence-list li { margin-bottom: .12rem; }
+
+    /* 行動按鈕群組 */
+    .action-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .3rem;
+      padding: .6rem 1rem;
+      border-radius: var(--radius-btn);
+      font-size: .88rem;
+      font-weight: 600;
+      min-height: 48px;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      flex: 1;
+      min-width: 120px;
+      transition: opacity var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .action-btn:active { opacity: .8; transform: scale(.96); }
+    .action-btn-tel {
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: var(--shadow-btn);
+    }
+    .action-btn-url {
+      background: var(--color-navy);
+      color: #fff;
+    }
+
+    /* ========================================================
+       #map-view — 友善資源地圖（Sub-Task 6）
+    ======================================================== */
+
+    #map-view {
+      display: none;
+      flex-direction: column;
+      min-height: calc(100vh - 52px - 60px); /* viewport - header - tabbar */
+    }
+    #map-view.active {
+      display: flex;
+    }
+
+    /* Leaflet 地圖容器 */
+    #leaflet-map {
+      flex: 0 0 55vh;
+      min-height: 200px;
+      width: 100%;
+      background: #e8f0e8;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 控制列 */
+    .map-controls {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: .45rem;
+      padding: .55rem .75rem .4rem;
+      background: var(--color-surface);
+      border-bottom: 1.5px solid var(--color-border);
+    }
+    .map-locate-btn {
+      width: 100%;
+      padding: .65rem;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+      transition: background var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .map-locate-btn:active { transform: scale(.97); background: var(--color-primary-d); }
+
+    /* 類型篩選 Tab */
+    .map-filter-tabs {
+      display: flex;
+      gap: .35rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .map-filter-tabs::-webkit-scrollbar { display: none; }
+    .map-filter-tab {
+      flex-shrink: 0;
+      padding: .38rem .75rem;
+      border-radius: 50px;
+      border: 1.5px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-muted);
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color var(--transition), background var(--transition), color var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .map-filter-tab.active {
+      border-color: var(--color-primary);
+      background: rgba(255,107,53,.1);
+      color: var(--color-primary);
+    }
+
+    /* 機構列表（下半部可滑動） */
+    .map-location-list {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: .55rem .75rem 80px;
+      display: flex;
+      flex-direction: column;
+      gap: .55rem;
+    }
+
+    /* 機構卡片 */
+    .location-card {
+      display: flex;
+      align-items: stretch;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .location-card:active { box-shadow: var(--shadow-card); border-color: var(--color-primary); }
+    .location-card.nearby {
+      border-color: var(--color-primary);
+      background: rgba(255,107,53,.04);
+    }
+    .location-card-stripe {
+      width: 5px;
+      flex-shrink: 0;
+    }
+    .stripe-medical  { background: #3b82f6; }
+    .stripe-legal    { background: #22c55e; }
+    .stripe-newcomer { background: #f97316; }
+
+    .location-card-body {
+      flex: 1;
+      padding: .65rem .75rem;
+      min-width: 0;
+    }
+    .location-card-header {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      margin-bottom: .2rem;
+    }
+    .location-card-name {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--color-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .location-card-nearby-badge {
+      flex-shrink: 0;
+      font-size: .68rem;
+      font-weight: 700;
+      background: var(--color-primary);
+      color: #fff;
+      border-radius: 50px;
+      padding: .1rem .45rem;
+    }
+    .location-card-address {
+      font-size: .76rem;
+      color: var(--color-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: .2rem;
+    }
+    .location-card-phone {
+      font-size: .78rem;
+      color: var(--color-navy);
+      font-weight: 600;
+    }
+    .map-nearby-label {
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: .3rem .1rem .1rem;
+    }
+
+    /* ========================================================
+       Sub-Task 7 — 地標遊戲 Toast + Modal
+    ======================================================== */
+
+    /* ---- #game-toast 底部通知條 ---- */
+    .game-toast {
+      position: fixed;
+      bottom: 72px;        /* Tab Bar(60) + 12px margin */
+      left: .75rem;
+      right: .75rem;
+      z-index: 300;
+      background: #FF8C00;
+      color: #fff;
+      border-radius: 14px;
+      padding: .75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,.28);
+      transform: translateY(120%);
+      transition: transform .32s cubic-bezier(.32,.72,0,1);
+    }
+    .game-toast.visible {
+      transform: translateY(0);
+    }
+    .game-toast.hidden { display: none; }
+    .game-toast-text {
+      flex: 1;
+      font-size: .95rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .game-toast-start {
+      background: #fff;
+      color: #FF8C00;
+      border: none;
+      border-radius: 8px;
+      padding: .45rem .9rem;
+      font-size: .9rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .game-toast-start:active { opacity: .85; transform: scale(.95); }
+    .game-toast-dismiss {
+      background: transparent;
+      color: rgba(255,255,255,.8);
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: .1rem .3rem;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1;
+    }
+
+    /* ---- #game-modal 全螢幕遊戲 Modal ---- */
+    .game-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 400;
+      background: var(--color-bg);
+      display: flex;
+      flex-direction: column;
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .game-modal.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(30px);
+    }
+    .game-modal-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 1rem 2rem;
+    }
+
+    /* 遊戲 Header */
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .75rem 0 .5rem;
+      border-bottom: 1.5px solid var(--color-border);
+      margin-bottom: 1rem;
+    }
+    .game-header-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .game-landmark-name {
+      font-size: .95rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .game-distance {
+      font-size: .75rem;
+      color: var(--color-muted);
+      margin-top: .1rem;
+    }
+    .btn-close-game {
+      background: var(--color-bg);
+      border: 1.5px solid var(--color-border);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-muted);
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .btn-close-game:active { background: var(--color-border); }
+
+    /* 遊戲內容區 */
+    #game-content {
+      flex: 1;
+    }
+
+    /* 遊戲 A — 閃卡配對 */
+    .game-a-emoji {
+      font-size: 4.5rem;
+      text-align: center;
+      margin: 1rem 0 .75rem;
+      line-height: 1;
+    }
+    .game-a-question {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-navy);
+      text-align: center;
+      margin-bottom: 1.2rem;
+      line-height: 1.5;
+    }
+    .game-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .65rem;
+    }
+    .game-option-btn {
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .85rem .6rem;
+      font-size: .92rem;
+      font-weight: 600;
+      color: var(--color-text);
+      cursor: pointer;
+      text-align: center;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color var(--transition), background var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .game-option-btn:active { transform: scale(.96); }
+    .game-option-btn.correct {
+      border-color: var(--color-success);
+      background: #e6f4ea;
+      color: var(--color-success);
+    }
+    .game-option-btn.wrong {
+      border-color: var(--color-danger);
+      background: #fde8e8;
+      color: var(--color-danger);
+    }
+    .game-option-btn:disabled { cursor: default; }
+
+    /* 遊戲 B — 緊急排序 */
+    .game-b-instruct {
+      font-size: .85rem;
+      color: var(--color-muted);
+      text-align: center;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .game-b-question {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-navy);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .game-sort-list {
+      display: flex;
+      flex-direction: column;
+      gap: .55rem;
+      margin-bottom: 1rem;
+    }
+    .game-sort-item {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .7rem .9rem;
+      min-height: 52px;
+    }
+    .game-sort-rank {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: .8rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .game-sort-emoji { font-size: 1.5rem; flex-shrink: 0; }
+    .game-sort-label { flex: 1; font-size: .9rem; font-weight: 600; }
+    .game-sort-btns {
+      display: flex;
+      flex-direction: column;
+      gap: .2rem;
+      flex-shrink: 0;
+    }
+    .game-sort-btn {
+      background: var(--color-bg);
+      border: 1.5px solid var(--color-border);
+      border-radius: 6px;
+      width: 30px;
+      height: 26px;
+      font-size: .9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: background var(--transition);
+    }
+    .game-sort-btn:active { background: var(--color-border); transform: scale(.92); }
+    .game-sort-btn:disabled { opacity: .3; pointer-events: none; }
+    .btn-confirm-sort {
+      width: 100%;
+      padding: .9rem;
+      background: var(--color-navy);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 52px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background var(--transition), transform var(--transition);
+    }
+    .btn-confirm-sort:active { transform: scale(.97); background: var(--color-navy-d); }
+
+    /* 遊戲 C — 情境填空 */
+    .game-c-instruct {
+      font-size: .85rem;
+      color: var(--color-muted);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .game-c-sentence {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--color-navy);
+      text-align: center;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: 1rem;
+      margin-bottom: 1.2rem;
+      line-height: 1.7;
+    }
+    .game-c-sentence .blank {
+      display: inline-block;
+      min-width: 80px;
+      border-bottom: 2.5px solid var(--color-primary);
+      color: var(--color-primary);
+      font-weight: 800;
+    }
+    .game-c-options {
+      display: flex;
+      flex-direction: column;
+      gap: .55rem;
+    }
+    .game-c-option-btn {
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .85rem 1rem;
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--color-text);
+      cursor: pointer;
+      text-align: left;
+      min-height: 52px;
+      transition: border-color var(--transition), background var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .game-c-option-btn:active { transform: scale(.97); }
+    .game-c-option-btn.correct {
+      border-color: var(--color-success);
+      background: #e6f4ea;
+      color: var(--color-success);
+    }
+    .game-c-option-btn.wrong {
+      border-color: var(--color-danger);
+      background: #fde8e8;
+      color: var(--color-danger);
+    }
+    .game-c-option-btn:disabled { cursor: default; }
+
+    /* 遊戲結果區 */
+    #game-result {
+      margin-top: 1.2rem;
+      border-radius: var(--radius-card);
+      overflow: hidden;
+    }
+    #game-result.hidden { display: none; }
+    .game-result-banner {
+      padding: .85rem 1rem;
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+    .game-result-banner.correct-banner {
+      background: #e6f4ea;
+      color: var(--color-success);
+    }
+    .game-result-banner.wrong-banner {
+      background: #fde8e8;
+      color: var(--color-danger);
+    }
+    .game-result-explain {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: .85rem 1rem;
+      margin-top: .65rem;
+      font-size: .88rem;
+      color: var(--color-text);
+      line-height: 1.65;
+    }
+    .game-result-score {
+      text-align: center;
+      font-size: .82rem;
+      color: var(--color-muted);
+      margin-top: .55rem;
+    }
+    .game-result-close-hint {
+      text-align: center;
+      font-size: .78rem;
+      color: var(--color-muted);
+      margin-top: .45rem;
+      font-style: italic;
+    }
+
+    /* ========================================================
+       Sub-Task 8 — 成就機制 & 排名系統
+    ======================================================== */
+
+    /* ---- 成就格子區 ---- */
+    .section-title {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--color-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: .6rem 1rem .2rem;
+    }
+    .achievement-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: .45rem;
+      padding: .25rem 1rem .75rem;
+    }
+    .ach-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .2rem;
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-border);
+      border-radius: 12px;
+      padding: .6rem .2rem;
+      cursor: default;
+      position: relative;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .ach-cell.unlocked {
+      border-color: #f9c74f;
+      background: linear-gradient(135deg, #fffde7 0%, #fff8e1 100%);
+      cursor: pointer;
+    }
+    .ach-cell.unlocked:active { transform: scale(.95); }
+    .ach-cell-emoji {
+      font-size: 1.55rem;
+      line-height: 1;
+    }
+    .ach-cell.locked .ach-cell-emoji {
+      filter: grayscale(1) opacity(.35);
+    }
+    .ach-cell-name {
+      font-size: .6rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--color-text);
+      line-height: 1.2;
+    }
+    .ach-cell.locked .ach-cell-name {
+      color: var(--color-muted);
+    }
+
+    /* 解鎖時間 tooltip */
+    .ach-tooltip {
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(27,79,114,.9);
+      color: #fff;
+      font-size: .7rem;
+      padding: .3rem .55rem;
+      border-radius: 8px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 500;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .ach-cell.unlocked:hover .ach-tooltip,
+    .ach-cell.unlocked:focus .ach-tooltip { opacity: 1; }
+
+    /* ---- 成就慶祝 Modal ---- */
+    .achievement-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .achievement-modal.hidden { display: none; }
+
+    .achievement-celebration {
+      background: var(--color-surface);
+      border-radius: 22px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      max-width: 320px;
+      width: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,.35);
+      animation: achBounceIn .45s cubic-bezier(.22,.68,0,1.3) both;
+      position: relative;
+    }
+    @keyframes achBounceIn {
+      0%   { transform: scale(.4) translateY(60px); opacity: 0; }
+      70%  { transform: scale(1.06) translateY(-6px); }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .ach-stars {
+      font-size: 1.4rem;
+      letter-spacing: .15em;
+      margin-bottom: .6rem;
+      animation: achSparkle 1s ease-in-out infinite alternate;
+    }
+    @keyframes achSparkle {
+      0%   { transform: scale(1) rotate(-4deg); }
+      100% { transform: scale(1.15) rotate(4deg); }
+    }
+    .ach-emoji {
+      font-size: 5rem;
+      line-height: 1;
+      margin-bottom: .6rem;
+      animation: achEmojiPop .6s cubic-bezier(.22,.68,0,1.4) .1s both;
+    }
+    @keyframes achEmojiPop {
+      0%   { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+    .ach-name {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: .35rem;
+    }
+    .ach-time {
+      font-size: .78rem;
+      color: var(--color-muted);
+      margin-bottom: 1.2rem;
+    }
+    .achievement-celebration button {
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-btn);
+      padding: .75rem 2rem;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .achievement-celebration button:active { background: var(--color-primary-d); transform: scale(.97); }
+
+    /* ---- 段位升段 Toast ---- */
+    .rankup-toast {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 550;
+      background: linear-gradient(90deg, #f9c74f 0%, #f4a261 100%);
+      color: #7a4a00;
+      padding: .7rem 1.2rem;
+      font-size: 1rem;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: .02em;
+      transform: translateY(-100%);
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+      box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    }
+    .rankup-toast.visible { transform: translateY(0); }
+  </style>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <style>
+    /* 確保互動按鈕觸控面積符合 44px 最低標準 */
+    .btn-primary { min-height: 44px; }
+    /* 全域基礎字級 */
+    html { font-size: 15px; }
+    /* #achievement-grid id 對應（class 已定義 display:grid） */
+    #achievement-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .45rem; padding: .25rem 1rem .75rem; }
+    /* #rankup-toast id 對應（class 已定義） */
+    #rankup-toast { position: fixed; top: 0; left: 0; right: 0; z-index: 550; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════ Splash：語系選擇 ══════════════ -->
+  <section id="lang-screen" class="screen">
+    <div class="lang-logo">🌏</div>
+    <h1 class="lang-title" data-i18n="langScreenTitle">請選擇語言</h1>
+    <p  class="lang-subtitle" data-i18n="langScreenSubtitle">選擇後可隨時在主頁切換</p>
+
+    <div class="lang-grid">
+
+      <!-- 中文 -->
+      <button class="lang-card" data-lang="zh" aria-label="選擇中文">
+        <span class="lang-flag">🇹🇼</span>
+        <span class="lang-native">中文（繁體）</span>
+        <span class="lang-zh">中文</span>
+      </button>
+
+      <!-- English -->
+      <button class="lang-card" data-lang="en" aria-label="Select English">
+        <span class="lang-flag">🇬🇧</span>
+        <span class="lang-native">English</span>
+        <span class="lang-zh">英文</span>
+      </button>
+
+      <!-- Bahasa Indonesia -->
+      <button class="lang-card" data-lang="id" aria-label="Pilih Bahasa Indonesia">
+        <span class="lang-flag">🇮🇩</span>
+        <span class="lang-native">Bahasa Indonesia</span>
+        <span class="lang-zh">印尼語</span>
+      </button>
+
+      <!-- Tiếng Việt -->
+      <button class="lang-card" data-lang="vi" aria-label="Chọn Tiếng Việt">
+        <span class="lang-flag">🇻🇳</span>
+        <span class="lang-native">Tiếng Việt</span>
+        <span class="lang-zh">越南語</span>
+      </button>
+
+      <!-- ภาษาไทย（置中，跨兩欄） -->
+      <button class="lang-card" data-lang="th" aria-label="เลือกภาษาไทย">
+        <span class="lang-flag">🇹🇭</span>
+        <span class="lang-native">ภาษาไทย</span>
+        <span class="lang-zh">泰語</span>
+      </button>
+
+    </div>
+
+    <!-- iOS 安裝引導提示 -->
+    <div id="ios-install-tip" class="ios-tip hidden">
+      📲 iOS 用戶：點擊下方 <strong>分享</strong> 按鈕 → 「加入主畫面」即可安裝 App
+    </div>
+
+  </section>
+
+  <!-- 離線提示橫幅（全域） -->
+  <div id="offline-banner" class="offline-banner hidden">
+    📶 目前離線 — 地圖等部分功能可能受限
+  </div>
+
+  <!-- ══════════════ 登入頁 ══════════════ -->
+  <section id="auth-screen" class="screen hidden">
+    <div class="auth-header">
+      <div class="auth-logo">🌏</div>
+      <h2 data-i18n="authWelcome">歡迎使用 MigrantCare</h2>
+      <p data-i18n="authSubtitle">高雄市移工友善助手</p>
+    </div>
+
+    <!-- 使用者列表（JS 動態填入） -->
+    <p class="user-list-label" data-i18n="loginTitle" style="max-width:480px;margin-left:auto;margin-right:auto;">選擇帳號</p>
+    <div class="user-list" id="user-list">
+      <!-- renderUserList() 填入 -->
+    </div>
+
+    <!-- 新增使用者按鈕 -->
+    <button class="btn-add-user" id="btn-add-user">
+      <span style="font-size:1.25rem;">＋</span>
+      <span data-i18n="btnRegister">建立新帳號</span>
+    </button>
+  </section>
+
+  <!-- ══════════════ PIN 輸入 Modal（底部抽屜） ══════════════ -->
+  <div class="modal-overlay" id="pin-modal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-drag"></div>
+      <div class="pin-modal-user">
+        <span class="pin-modal-avatar" id="pin-modal-avatar">🧑</span>
+        <div>
+          <div class="pin-modal-name" id="pin-modal-name">使用者</div>
+          <div class="pin-modal-hint" data-i18n="inputPin">4 位數字 PIN</div>
+        </div>
+      </div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" data-i="0"></div>
+        <div class="pin-dot" data-i="1"></div>
+        <div class="pin-dot" data-i="2"></div>
+        <div class="pin-dot" data-i="3"></div>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
+      <div class="pin-keypad" id="pin-keypad">
+        <button class="pin-key" data-val="1">1</button>
+        <button class="pin-key" data-val="2">2</button>
+        <button class="pin-key" data-val="3">3</button>
+        <button class="pin-key" data-val="4">4</button>
+        <button class="pin-key" data-val="5">5</button>
+        <button class="pin-key" data-val="6">6</button>
+        <button class="pin-key" data-val="7">7</button>
+        <button class="pin-key" data-val="8">8</button>
+        <button class="pin-key" data-val="9">9</button>
+        <button class="pin-key key-empty"></button>
+        <button class="pin-key" data-val="0">0</button>
+        <button class="pin-key key-del" id="pin-del">⌫</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ 註冊頁 ══════════════ -->
+  <section id="register-screen" class="screen hidden">
+    <div class="register-header">
+      <button class="btn-back" id="btn-back-register" aria-label="返回">←</button>
+      <h2 data-i18n="registerTitle">建立帳號</h2>
+    </div>
+
+    <!-- 暱稱 -->
+    <div class="form-section">
+      <label class="form-label" data-i18n="inputNickname">暱稱（2–20 字）</label>
+      <input class="form-input" id="reg-nickname" type="text" maxlength="20"
+             placeholder="2–20 字" autocomplete="off" />
+    </div>
+
+    <!-- PIN 設定 -->
+    <div class="form-section">
+      <label class="form-label" data-i18n="inputPin">設定 4 位 PIN</label>
+      <div class="register-pin-dots" id="reg-pin-dots">
+        <div class="pin-dot" data-i="0"></div>
+        <div class="pin-dot" data-i="1"></div>
+        <div class="pin-dot" data-i="2"></div>
+        <div class="pin-dot" data-i="3"></div>
+      </div>
+      <div class="register-pin-error" id="reg-pin-error"></div>
+      <div class="pin-keypad" id="reg-pin-keypad">
+        <button class="pin-key" data-val="1">1</button>
+        <button class="pin-key" data-val="2">2</button>
+        <button class="pin-key" data-val="3">3</button>
+        <button class="pin-key" data-val="4">4</button>
+        <button class="pin-key" data-val="5">5</button>
+        <button class="pin-key" data-val="6">6</button>
+        <button class="pin-key" data-val="7">7</button>
+        <button class="pin-key" data-val="8">8</button>
+        <button class="pin-key" data-val="9">9</button>
+        <button class="pin-key key-empty"></button>
+        <button class="pin-key" data-val="0">0</button>
+        <button class="pin-key key-del" id="reg-pin-del">⌫</button>
+      </div>
+    </div>
+
+    <!-- 身份選擇 -->
+    <div class="form-section">
+      <label class="form-label" data-i18n="labelIdentity">您的身份</label>
+      <div class="identity-grid" id="identity-grid">
+        <button class="identity-btn" data-identity="worker">
+          <span class="identity-icon">🏗️</span>
+          <span data-i18n="identityWorker">外籍移工</span>
+        </button>
+        <button class="identity-btn" data-identity="newcomer">
+          <span class="identity-icon">🏠</span>
+          <span data-i18n="identityNewcomer">新住民</span>
+        </button>
+        <button class="identity-btn" data-identity="other">
+          <span class="identity-icon">👤</span>
+          <span data-i18n="identityOther">其他</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 頭像選擇 -->
+    <div class="form-section">
+      <label class="form-label" data-i18n="labelAvatar">選擇頭像</label>
+      <div class="avatar-grid" id="avatar-grid">
+        <button class="avatar-btn" data-avatar="🧕">🧕</button>
+        <button class="avatar-btn" data-avatar="👨">👨</button>
+        <button class="avatar-btn" data-avatar="👩">👩</button>
+        <button class="avatar-btn" data-avatar="🧑">🧑</button>
+        <button class="avatar-btn" data-avatar="👦">👦</button>
+        <button class="avatar-btn" data-avatar="👧">👧</button>
+        <button class="avatar-btn" data-avatar="🧓">🧓</button>
+      </div>
+    </div>
+
+    <button class="btn-primary btn-done" id="btn-reg-done" data-i18n="btnConfirm">確認</button>
+  </section>
+
+  <!-- ══════════════ 主頁（Sub-Task 3 placeholder） ══════════════ -->
+  <!-- ===== 主頁面 ===== -->
+  <section id="main-screen" class="screen hidden">
+
+    <!-- Header -->
+    <header class="main-header">
+      <span class="main-header-brand">MigrantCare</span>
+      <div class="main-header-right">
+        <button class="main-header-user" id="btn-header-user" aria-label="使用者選單">
+          <span class="main-header-user-avatar" id="header-avatar">🧑</span>
+          <span id="header-nickname">使用者</span>
+        </button>
+        <button class="main-header-lang" id="btn-main-lang" aria-label="語言切換">🌐</button>
+      </div>
+    </header>
+
+    <!-- 可捲動內容區 -->
+    <div class="main-body">
+
+      <!-- 首頁 View -->
+      <div id="home-view" class="main-view active">
+
+        <!-- 圓形熟悉度進度環 + 段位 -->
+        <div class="familiarity-ring-wrap">
+          <div class="familiarity-ring" id="familiarity-ring" style="--ring-pct:0">
+            <div class="familiarity-ring-inner">
+              <span class="familiarity-score-num" id="familiarity-score">0</span>
+              <span class="familiarity-score-unit">%</span>
+            </div>
+          </div>
+          <div class="rank-badge" id="rank-badge">
+            <span id="rank-emoji">🌱</span>
+            <span id="rank-name" data-i18n="rankSprout">新芽</span>
+          </div>
+        </div>
+
+        <!-- 分項統計 -->
+        <div class="stat-cards">
+          <div class="stat-card">
+            <div class="stat-card-icon">🏛</div>
+            <div class="stat-card-label" data-i18n="homeStatLaborLabel">勞工權益</div>
+            <div class="stat-card-value" id="stat-labor">0/24</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon">💊</div>
+            <div class="stat-card-label" data-i18n="homeStatSymptomLabel">問診卡</div>
+            <div class="stat-card-value" id="stat-symptom">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon">🗺</div>
+            <div class="stat-card-label" data-i18n="homeStatLandmarkLabel">地標遊戲</div>
+            <div class="stat-card-value" id="stat-landmark">0</div>
+          </div>
+        </div>
+
+        <!-- 遊戲功能 Toggle -->
+        <div class="game-toggle-row">
+          <span class="game-toggle-label">
+            <span>🎮</span>
+            <span data-i18n="homeGameSwitch">地標遊戲</span>
+          </span>
+          <label class="toggle-switch" aria-label="遊戲開關">
+            <input type="checkbox" id="game-toggle-input">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- 快速入口 -->
+        <p class="quick-entry-title" data-i18n="homeQuickEntry">快速入口</p>
+        <div class="quick-cards">
+          <button class="quick-card" onclick="switchTab('symptom')" aria-label="問診卡">
+            <div class="quick-card-icon">💊</div>
+            <div class="quick-card-label" data-i18n="tabMedical">問診卡</div>
+          </button>
+          <button class="quick-card" onclick="switchTab('labor')" aria-label="權益速查">
+            <div class="quick-card-icon">🏛</div>
+            <div class="quick-card-label" data-i18n="tabLabor">權益速查</div>
+          </button>
+          <button class="quick-card" onclick="switchTab('map')" aria-label="資源地圖">
+            <div class="quick-card-icon">🗺</div>
+            <div class="quick-card-label" data-i18n="tabMap">資源地圖</div>
+          </button>
+        </div>
+
+        <!-- 最近位置 -->
+        <div class="location-row">
+          <span>📍</span>
+          <span id="home-location" data-i18n="homeNoLocation">尚未記錄</span>
+        </div>
+
+        <!-- 成就展示區（Sub-Task 8） -->
+        <p class="section-title" data-i18n="achievementsTitle">成就</p>
+        <div id="achievement-grid" class="achievement-grid">
+          <!-- renderAchievements() 動態填充 -->
+        </div>
+
+      </div><!-- /#home-view -->
+
+      <!-- 問診卡 View — Sub-Task 4 -->
+      <div id="symptom-view" class="main-view">
+        <div class="symptom-view-inner" id="symptom-inner">
+          <!-- 由 renderSymptomStep1() 動態填充 -->
+        </div>
+      </div>
+
+      <!-- 權益速查 View（ST5） -->
+      <div id="labor-view" class="main-view">
+        <div class="labor-view-inner" id="labor-inner">
+          <!-- renderLaborCategories() 動態填充 -->
+        </div>
+      </div>
+
+      <!-- 資源地圖 View（ST6） -->
+      <div id="map-view" class="main-view">
+        <!-- 地圖容器 -->
+        <div id="leaflet-map"></div>
+        <!-- 控制列 -->
+        <div class="map-controls">
+          <button class="map-locate-btn" id="map-locate-btn" onclick="locateMe()">
+            📍 <span data-i18n="mapLocateBtn">定位我的位置</span>
+          </button>
+          <div class="map-filter-tabs" id="map-filter-tabs">
+            <button class="map-filter-tab active" data-filter="all" onclick="setMapFilter('all')">
+              <span data-i18n="mapFilterAll">全部</span>
+            </button>
+            <button class="map-filter-tab" data-filter="medical" onclick="setMapFilter('medical')">
+              <span data-i18n="mapFilterMedical">🏥 醫療</span>
+            </button>
+            <button class="map-filter-tab" data-filter="legal" onclick="setMapFilter('legal')">
+              <span data-i18n="mapFilterLegal">⚖️ 法扶</span>
+            </button>
+            <button class="map-filter-tab" data-filter="newcomer" onclick="setMapFilter('newcomer')">
+              <span data-i18n="mapFilterNewcomer">🏠 服務中心</span>
+            </button>
+          </div>
+        </div>
+        <!-- 機構列表 -->
+        <div class="map-location-list" id="map-location-list">
+          <!-- renderLocationList() 動態填充 -->
+        </div>
+      </div>
+
+    </div><!-- /.main-body -->
+
+    <!-- 底部 Tab Bar -->
+    <nav class="tab-bar" role="tablist">
+      <button class="tab-btn active" id="tab-home" role="tab" aria-selected="true"
+              onclick="switchTab('home')">
+        <span class="tab-btn-icon">🏠</span>
+        <span data-i18n="tabHome">首頁</span>
+      </button>
+      <button class="tab-btn" id="tab-symptom" role="tab" aria-selected="false"
+              onclick="switchTab('symptom')">
+        <span class="tab-btn-icon">💊</span>
+        <span data-i18n="tabMedical">問診卡</span>
+      </button>
+      <button class="tab-btn" id="tab-labor" role="tab" aria-selected="false"
+              onclick="switchTab('labor')">
+        <span class="tab-btn-icon">🏛</span>
+        <span data-i18n="tabLabor">權益速查</span>
+      </button>
+      <button class="tab-btn" id="tab-map" role="tab" aria-selected="false"
+              onclick="switchTab('map')">
+        <span class="tab-btn-icon">🗺</span>
+        <span data-i18n="tabMap">資源地圖</span>
+      </button>
+    </nav>
+
+  </section><!-- /#main-screen -->
+
+  <!-- 出示卡 Modal — Sub-Task 4 -->
+  <div id="card-modal" role="dialog" aria-modal="true" aria-labelledby="card-modal-title-text">
+    <div class="card-modal-sheet">
+      <div class="card-modal-header">
+        <p class="card-modal-title" id="card-modal-title-text"></p>
+        <button class="card-modal-close" id="card-modal-close" aria-label="關閉">✕</button>
+      </div>
+      <!-- 緊急警示（有緊急症狀時顯示） -->
+      <div class="med-card-urgent" id="card-urgent" style="display:none"></div>
+      <!-- 母語區塊 -->
+      <div class="med-card-block">
+        <p class="med-card-block-label" id="card-native-label"></p>
+        <p class="med-card-content" id="card-native-content"></p>
+      </div>
+      <hr class="med-card-divider">
+      <!-- 中文區塊 -->
+      <div class="med-card-block">
+        <p class="med-card-block-label" id="card-zh-label"></p>
+        <p class="med-card-content" id="card-zh-content"></p>
+      </div>
+      <!-- 底部按鈕 -->
+      <div class="card-modal-btns">
+        <button class="btn-outline" id="card-btn-copy"></button>
+        <button class="btn-primary" id="card-btn-reset"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 緊急浮動按鈕（固定，不隨 screen 隱藏） -->
+  <div class="emergency-fab" id="emergency-fab" style="display:none">
+    <a href="tel:119" class="fab-btn fab-119" aria-label="撥打 119">
+      <span>📞</span>
+      <span>119</span>
+    </a>
+    <a href="tel:1955" class="fab-btn fab-1955" aria-label="撥打 1955">
+      <span>📞</span>
+      <span>1955</span>
+    </a>
+  </div>
+
+  <!-- 切換語言浮動按鈕（auth/register 時顯示） -->
+  <button id="btn-switch-lang">🌐 &nbsp;<span data-i18n="tabHome">語言</span></button>
+
+  <!-- ══════════════ Sub-Task 8 — 成就慶祝 Modal ══════════════ -->
+  <div id="achievement-modal" class="achievement-modal hidden" role="dialog" aria-modal="true" aria-labelledby="ach-name">
+    <div class="achievement-celebration">
+      <div class="ach-stars">✨✨✨✨</div>
+      <div id="ach-emoji" class="ach-emoji"></div>
+      <div id="ach-name" class="ach-name"></div>
+      <div id="ach-time" class="ach-time"></div>
+      <button onclick="closeAchievementModal()">OK 🎉</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ Sub-Task 8 — 段位升段 Toast ══════════════ -->
+  <div id="rankup-toast" class="rankup-toast" role="status" aria-live="polite"></div>
+
+  <!-- ══════════════ Sub-Task 7 — 地標遊戲 Toast ══════════════ -->
+  <div id="game-toast" class="game-toast hidden" role="alert">
+    <span class="game-toast-text" id="toast-text">🎮 附近有任務！</span>
+    <button class="game-toast-start" id="toast-start-btn" onclick="openGameModal()">開始 ▶</button>
+    <button class="game-toast-dismiss" id="toast-dismiss-btn" onclick="dismissToast()" aria-label="關閉通知">✕</button>
+  </div>
+
+  <!-- ══════════════ Sub-Task 7 — 全螢幕遊戲 Modal ══════════════ -->
+  <div id="game-modal" class="game-modal hidden" role="dialog" aria-modal="true" aria-labelledby="game-landmark-name">
+    <div class="game-modal-inner">
+      <!-- Header -->
+      <div class="game-header">
+        <div class="game-header-info">
+          <div class="game-landmark-name" id="game-landmark-name">📍 地標任務</div>
+          <div class="game-distance" id="game-distance"></div>
+        </div>
+        <button class="btn-close-game" id="btn-close-game" onclick="closeGameModal()" aria-label="關閉遊戲">✕</button>
+      </div>
+      <!-- 動態遊戲內容 -->
+      <div id="game-content"></div>
+      <!-- 結果區（答完後顯示） -->
+      <div id="game-result" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS（必須在 data scripts 之前，確保 L 全域可用） -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLEg=" crossorigin=""></script>
+  <!-- ===== 語系資料 ===== -->
+  <script src="lang-data.js"></script>
+  <!-- ===== 問診卡資料（Sub-Task 4）===== -->
+  <script src="symptoms-data.js"></script>
+  <!-- ===== 勞工權益資料（Sub-Task 5）===== -->
+  <script src="labor-data.js"></script>
+  <!-- ===== 地點資料（Sub-Task 6）===== -->
+  <script src="locations-data.js"></script>
+  <!-- ===== 遊戲題庫（Sub-Task 7）===== -->
+  <script src="game-data.js"></script>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════
+       工具函式
+    ═══════════════════════════════════════════════════════════ */
+
+    /** 讀取目前語系，預設 'zh' */
+    function getCurrentLang() {
+      return localStorage.getItem('migrant_lang') || 'zh';
+    }
+
+    /** 取得翻譯字串 */
+    function t(key) {
+      const lang = getCurrentLang();
+      const dict = LANG_DATA[lang] || LANG_DATA['zh'];
+      return dict[key] !== undefined ? dict[key] : key;
+    }
+
+    /**
+     * applyLang()
+     * 讀取 localStorage 語系，將所有 [data-i18n] 元素的文字替換為對應語系的字串。
+     */
+    function applyLang() {
+      const lang   = getCurrentLang();
+      const dict   = LANG_DATA[lang] || LANG_DATA['zh'];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key && dict[key] !== undefined) el.textContent = dict[key];
+      });
+
+      const langMap = { zh: 'zh-TW', en: 'en', id: 'id', vi: 'vi', th: 'th' };
+      document.documentElement.lang = langMap[lang] || 'zh-TW';
+
+      document.querySelectorAll('.lang-card').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.lang === lang);
+      });
+    }
+
+    /**
+     * setLanguage(code)
+     */
+    function setLanguage(code) {
+      if (!LANG_DATA[code]) return;
+
+      const card = document.querySelector(`.lang-card[data-lang="${code}"]`);
+      if (card) {
+        card.classList.add('selected');
+        card.style.transform = 'scale(0.9)';
+        setTimeout(() => { card.style.transform = ''; }, 180);
+      }
+
+      localStorage.setItem('migrant_lang', code);
+      applyLang();
+
+      setTimeout(() => {
+        showScreen('auth-screen');
+        renderUserList();
+      }, 220);
+    }
+
+    /**
+     * showScreen(id)
+     */
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => {
+        s.classList.toggle('hidden', s.id !== screenId);
+      });
+      // auth/register 時顯示語言切換按鈕，main-screen 與 lang-screen 不顯示
+      const switchBtn = document.getElementById('btn-switch-lang');
+      if (switchBtn) {
+        switchBtn.style.display =
+          (screenId !== 'lang-screen' && screenId !== 'main-screen') ? 'flex' : 'none';
+      }
+      // 主頁面時顯示緊急浮動按鈕
+      const fab = document.getElementById('emergency-fab');
+      if (fab) fab.style.display = (screenId === 'main-screen') ? 'flex' : 'none';
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       localStorage helpers
+    ═══════════════════════════════════════════════════════════ */
+
+    const USERS_KEY = 'migrant_users';
+
+    /** 讀取整包 store */
+    function loadStore() {
+      try {
+        return JSON.parse(localStorage.getItem(USERS_KEY)) || { users: [], currentUserId: null };
+      } catch {
+        return { users: [], currentUserId: null };
+      }
+    }
+
+    /** 儲存整包 store */
+    function saveStore(store) {
+      localStorage.setItem(USERS_KEY, JSON.stringify(store));
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       使用者 API
+    ═══════════════════════════════════════════════════════════ */
+
+    /**
+     * createUser({ nickname, pin, avatar, identity, lang })
+     * 建立完整使用者物件，存入 localStorage，回傳新使用者。
+     */
+    function createUser({ nickname, pin, avatar, identity, lang }) {
+      const store = loadStore();
+      const user = {
+        id: 'uid_' + Date.now(),
+        nickname,
+        pin,
+        avatar,
+        identity,
+        lang: lang || getCurrentLang(),
+        createdAt: new Date().toISOString().slice(0, 10),
+        lastLocation: null,
+        laborProgress: {},
+        symptomHistory: [],
+        gameEnabled: true,
+        gameStats: {
+          totalPlayed: 0,
+          totalCorrect: 0,
+          landmarksVisited: [],
+          achievements: []
+        },
+        familiarityScore: 0
+      };
+      store.users.push(user);
+      saveStore(store);
+      return user;
+    }
+
+    /**
+     * loginUser(userId, pin)
+     * 驗證 PIN，設定 currentUserId，跳至主頁。
+     * 回傳 true（成功）或 false（失敗）。
+     */
+    function loginUser(userId, pin) {
+      const store = loadStore();
+      const user = store.users.find(u => u.id === userId);
+      if (!user || user.pin !== pin) return false;
+
+      store.currentUserId = userId;
+      saveStore(store);
+
+      // 同步語系
+      localStorage.setItem('migrant_lang', user.lang || getCurrentLang());
+      applyLang();
+
+      // 渲染主頁面並切換
+      renderHomePage();
+      showScreen('main-screen');
+
+      // Sub-Task 7：若遊戲開啟，自動啟動 GPS 掃描
+      if (user.gameEnabled !== false) {
+        startGpsWatch();
+      }
+
+      return true;
+    }
+
+    /**
+     * getCurrentUser()
+     * 回傳目前登入的使用者物件，或 null。
+     */
+    function getCurrentUser() {
+      const store = loadStore();
+      if (!store.currentUserId) return null;
+      return store.users.find(u => u.id === store.currentUserId) || null;
+    }
+
+    /**
+     * saveUserData(userId, updates)
+     * 以 updates 淺層合併更新指定使用者資料，並儲存。
+     */
+    function saveUserData(userId, updates) {
+      const store = loadStore();
+      const idx = store.users.findIndex(u => u.id === userId);
+      if (idx === -1) return;
+      store.users[idx] = Object.assign({}, store.users[idx], updates);
+      saveStore(store);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Sub-Task 6 — 地圖模組全局狀態（須在 switchTab 前宣告）
+    ═══════════════════════════════════════════════════════════ */
+
+    const _mapState = {
+      initialized: false,
+      map: null,
+      markers: [],      // Leaflet Marker 物件陣列（同步 LOCATIONS 順序）
+      circles: [],      // 200m 圓圈
+      userMarker: null, // 使用者位置 marker
+      currentFilter: 'all'
+    };
+
+    const MAP_TYPE_CONFIG = {
+      medical:  { color: '#3b82f6', label: '醫' },
+      legal:    { color: '#22c55e', label: '法' },
+      newcomer: { color: '#f97316', label: '新' }
+    };
+
+    /* ═══════════════════════════════════════════════════════════
+       Sub-Task 3 — 主頁面邏輯
+    ═══════════════════════════════════════════════════════════ */
+
+    /**
+     * switchTab(tabName)
+     * 切換 main-view 顯示與 Tab Bar 的 active 狀態。
+     * tabName: 'home' | 'symptom' | 'labor' | 'map'
+     */
+    function switchTab(tabName) {
+      // 切換 view
+      document.querySelectorAll('.main-view').forEach(v => {
+        v.classList.toggle('active', v.id === tabName + '-view');
+      });
+      // 切換 tab active 狀態
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.id === 'tab-' + tabName;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', String(isActive));
+      });
+      // home：刷新熟悉度環與成就（確保資料最新）
+      if (tabName === 'home') {
+        renderFamiliarityChart();
+        renderAchievements();
+      }
+      // Sub-Task 4：切換到問診卡 Tab 時初始化
+      if (tabName === 'symptom') {
+        initSymptomView();
+      }
+      // Sub-Task 5：切換到權益速查 Tab 時初始化
+      if (tabName === 'labor') {
+        renderLaborCategories();
+      }
+      // Sub-Task 6：切換到資源地圖 Tab 時初始化或修正尺寸
+      if (tabName === 'map') {
+        if (!_mapState.initialized) {
+          // 下一 frame 確保 #map-view 已 display:flex
+          requestAnimationFrame(() => initMap());
+        } else if (_mapState.map) {
+          requestAnimationFrame(() => _mapState.map.invalidateSize());
+        }
+      }
+    }
+
+    /**
+     * calcFamiliarityScore(user)
+     * 計算 0-100 分：勞工50% + 問診20% + 地標30%
+     */
+    function calcFamiliarityScore(user) {
+      const laborCount    = Object.keys(user.laborProgress || {}).length;    // 最多 24 題
+      const symptomCount  = (user.symptomHistory || []).length;               // 最多 10 次算滿分
+      const landmarkCount = (user.gameStats?.landmarksVisited || []).length;  // 最多 10 個算滿分
+
+      const laborScore    = Math.min(laborCount / 24, 1) * 50;
+      const symptomScore  = Math.min(symptomCount / 10, 1) * 20;
+      const landmarkScore = Math.min(landmarkCount / 10, 1) * 30;
+
+      return Math.round(laborScore + symptomScore + landmarkScore);
+    }
+
+    /**
+     * getRank(score)
+     * 依分數回傳段位物件 { emoji, key }
+     */
+    function getRank(score) {
+      if (score >= 80) return { emoji: '🏆', key: 'rankExpert'  };
+      if (score >= 60) return { emoji: '⭐', key: 'rankSkilled' };
+      if (score >= 40) return { emoji: '🌳', key: 'rankSteady'  };
+      if (score >= 20) return { emoji: '🌿', key: 'rankGrowing' };
+      return                 { emoji: '🌱', key: 'rankSprout'  };
+    }
+
+    /**
+     * renderFamiliarityChart()
+     * 更新圓形進度環、分數數字、段位徽章、分項統計。
+     */
+    function renderFamiliarityChart() {
+      const user = getCurrentUser();
+      if (!user) return;
+
+      const score = calcFamiliarityScore(user);
+      const rank  = getRank(score);
+
+      // 圓形進度環（CSS custom property）
+      const ring = document.getElementById('familiarity-ring');
+      if (ring) ring.style.setProperty('--ring-pct', score);
+
+      // 分數數字
+      const scoreEl = document.getElementById('familiarity-score');
+      if (scoreEl) scoreEl.textContent = score;
+
+      // 段位
+      const emojiEl = document.getElementById('rank-emoji');
+      const nameEl  = document.getElementById('rank-name');
+      if (emojiEl) emojiEl.textContent = rank.emoji;
+      if (nameEl)  {
+        nameEl.textContent = t(rank.key);
+        nameEl.setAttribute('data-i18n', rank.key);
+      }
+
+      // 分項統計
+      const laborCount    = Object.keys(user.laborProgress || {}).length;
+      const symptomCount  = (user.symptomHistory || []).length;
+      const landmarkCount = (user.gameStats?.landmarksVisited || []).length;
+
+      const statLabor    = document.getElementById('stat-labor');
+      const statSymptom  = document.getElementById('stat-symptom');
+      const statLandmark = document.getElementById('stat-landmark');
+      if (statLabor)    statLabor.textContent    = laborCount + '/24';
+      if (statSymptom)  statSymptom.textContent  = symptomCount;
+      if (statLandmark) statLandmark.textContent = landmarkCount;
+
+      // 最近位置
+      const locEl = document.getElementById('home-location');
+      if (locEl) {
+        if (user.lastLocation && user.lastLocation.timestamp) {
+          const d = new Date(user.lastLocation.timestamp);
+          locEl.textContent = d.toLocaleString() + (user.lastLocation.area ? '  ' + user.lastLocation.area : '');
+          locEl.removeAttribute('data-i18n');
+        } else {
+          locEl.textContent = t('homeNoLocation');
+          locEl.setAttribute('data-i18n', 'homeNoLocation');
+        }
+      }
+    }
+
+    /**
+     * renderHomePage()
+     * 更新 Header 使用者資訊 + 呼叫 renderFamiliarityChart + 設定 Toggle 初始狀態。
+     */
+    function renderHomePage() {
+      const user = getCurrentUser();
+      if (!user) return;
+
+      // Header 使用者資訊
+      const avatarEl = document.getElementById('header-avatar');
+      const nickEl   = document.getElementById('header-nickname');
+      if (avatarEl) avatarEl.textContent = user.avatar;
+      if (nickEl)   nickEl.textContent   = user.nickname;
+
+      // 圓形進度環 & 統計
+      renderFamiliarityChart();
+
+      // Sub-Task 8：成就格子初始渲染
+      renderAchievements();
+
+      // 遊戲 Toggle 狀態
+      const toggleEl = document.getElementById('game-toggle-input');
+      if (toggleEl) {
+        toggleEl.checked = user.gameEnabled !== false;   // 預設 true
+        toggleEl.onchange = function() {
+          const u = getCurrentUser();
+          if (!u) return;
+          saveUserData(u.id, { gameEnabled: this.checked });
+          if (this.checked) {
+            startGpsWatch();
+          } else {
+            stopGpsWatch();
+          }
+        };
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       登入頁渲染
+    ═══════════════════════════════════════════════════════════ */
+
+    /**
+     * renderUserList()
+     * 依 localStorage 使用者列表，重新渲染 #user-list 卡片。
+     */
+    function renderUserList() {
+      const store = loadStore();
+      const list  = document.getElementById('user-list');
+      if (!list) return;
+
+      list.innerHTML = '';
+
+      if (store.users.length === 0) {
+        // 無帳號 → 顯示歡迎提示
+        list.innerHTML = `
+          <div class="auth-empty">
+            <div class="auth-empty-icon">👋</div>
+            <p>${t('authWelcome')}！</p>
+            <p style="margin-top:.3rem;font-size:.82rem;">請先建立帳號</p>
+          </div>`;
+        return;
+      }
+
+      const identityIcon = { worker: '🏗️', newcomer: '🏠', other: '👤' };
+      const identityLabel = { worker: t('identityWorker'), newcomer: t('identityNewcomer'), other: t('identityOther') };
+
+      store.users.forEach(user => {
+        const card = document.createElement('button');
+        card.className = 'user-card';
+        card.dataset.uid = user.id;
+        card.setAttribute('aria-label', user.nickname);
+        card.innerHTML = `
+          <span class="user-card-avatar">${user.avatar}</span>
+          <span class="user-card-info">
+            <span class="user-card-name">${user.nickname}</span>
+            <span class="user-card-identity">${identityIcon[user.identity] || '👤'} ${identityLabel[user.identity] || user.identity}</span>
+          </span>
+          <span class="user-card-arrow">›</span>`;
+        card.addEventListener('click', () => openPinModal(user.id));
+        list.appendChild(card);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       PIN Modal（登入用）
+    ═══════════════════════════════════════════════════════════ */
+
+    let _pinModalUserId = null;
+    let _pinModalValue  = '';
+
+    function openPinModal(userId) {
+      const store = loadStore();
+      const user  = store.users.find(u => u.id === userId);
+      if (!user) return;
+
+      _pinModalUserId = userId;
+      _pinModalValue  = '';
+
+      document.getElementById('pin-modal-avatar').textContent = user.avatar;
+      document.getElementById('pin-modal-name').textContent   = user.nickname;
+      document.getElementById('pin-error').textContent        = '';
+      _updatePinDots('pin-dots', 0);
+
+      document.getElementById('pin-modal').classList.add('open');
+    }
+
+    function closePinModal() {
+      _pinModalUserId = null;
+      _pinModalValue  = '';
+      document.getElementById('pin-modal').classList.remove('open');
+    }
+
+    function _updatePinDots(dotContainerId, filledCount) {
+      document.querySelectorAll(`#${dotContainerId} .pin-dot`).forEach((dot, i) => {
+        dot.classList.toggle('filled', i < filledCount);
+      });
+    }
+
+    // 登入 Modal 鍵盤事件
+    document.getElementById('pin-keypad').addEventListener('click', e => {
+      const btn = e.target.closest('.pin-key');
+      if (!btn) return;
+      if (btn.classList.contains('key-del')) {
+        _pinModalValue = _pinModalValue.slice(0, -1);
+        _updatePinDots('pin-dots', _pinModalValue.length);
+        document.getElementById('pin-error').textContent = '';
+        return;
+      }
+      if (btn.dataset.val === undefined) return;
+      if (_pinModalValue.length >= 4) return;
+
+      _pinModalValue += btn.dataset.val;
+      _updatePinDots('pin-dots', _pinModalValue.length);
+
+      if (_pinModalValue.length === 4) {
+        // 自動驗證
+        setTimeout(() => {
+          const ok = loginUser(_pinModalUserId, _pinModalValue);
+          if (ok) {
+            closePinModal();
+          } else {
+            document.getElementById('pin-error').textContent = t('msgLoginFail');
+            // 震動回饋
+            _pinModalValue = '';
+            _updatePinDots('pin-dots', 0);
+          }
+        }, 150);
+      }
+    });
+
+    // 點遮罩關閉 Modal
+    document.getElementById('pin-modal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closePinModal();
+    });
+
+    /* ═══════════════════════════════════════════════════════════
+       註冊頁邏輯
+    ═══════════════════════════════════════════════════════════ */
+
+    let _regPin = '';
+    let _selectedIdentity = '';
+    let _selectedAvatar   = '';
+
+    function _initRegisterPage() {
+      _regPin            = '';
+      _selectedIdentity  = '';
+      _selectedAvatar    = '';
+
+      document.getElementById('reg-nickname').value   = '';
+      document.getElementById('reg-pin-error').textContent = '';
+      _updatePinDots('reg-pin-dots', 0);
+
+      document.querySelectorAll('.identity-btn').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+    }
+
+    // 返回按鈕
+    document.getElementById('btn-back-register').addEventListener('click', () => {
+      showScreen('auth-screen');
+      renderUserList();
+    });
+
+    // 新增使用者
+    document.getElementById('btn-add-user').addEventListener('click', () => {
+      _initRegisterPage();
+      applyLang();             // 確保新 screen 文字更新
+      showScreen('register-screen');
+    });
+
+    // 身份選擇
+    document.getElementById('identity-grid').addEventListener('click', e => {
+      const btn = e.target.closest('.identity-btn');
+      if (!btn) return;
+      document.querySelectorAll('.identity-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      _selectedIdentity = btn.dataset.identity;
+    });
+
+    // 頭像選擇
+    document.getElementById('avatar-grid').addEventListener('click', e => {
+      const btn = e.target.closest('.avatar-btn');
+      if (!btn) return;
+      document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      _selectedAvatar = btn.dataset.avatar;
+    });
+
+    // 註冊頁 PIN 鍵盤
+    document.getElementById('reg-pin-keypad').addEventListener('click', e => {
+      const btn = e.target.closest('.pin-key');
+      if (!btn) return;
+      if (btn.classList.contains('key-del')) {
+        _regPin = _regPin.slice(0, -1);
+        _updatePinDots('reg-pin-dots', _regPin.length);
+        return;
+      }
+      if (btn.dataset.val === undefined) return;
+      if (_regPin.length >= 4) return;
+      _regPin += btn.dataset.val;
+      _updatePinDots('reg-pin-dots', _regPin.length);
+    });
+
+    // 完成註冊
+    document.getElementById('btn-reg-done').addEventListener('click', () => {
+      const nickname = document.getElementById('reg-nickname').value.trim();
+      const errEl    = document.getElementById('reg-pin-error');
+
+      if (nickname.length < 2 || nickname.length > 20) {
+        errEl.textContent = t('msgNicknameRequired');
+        document.getElementById('reg-nickname').focus();
+        return;
+      }
+      if (_regPin.length !== 4) {
+        errEl.textContent = t('msgPinRequired');
+        return;
+      }
+      if (!_selectedIdentity) {
+        errEl.textContent = t('labelIdentity') + ' ?';
+        return;
+      }
+      if (!_selectedAvatar) {
+        errEl.textContent = t('labelAvatar') + ' ?';
+        return;
+      }
+
+      errEl.textContent = '';
+      const user = createUser({
+        nickname,
+        pin: _regPin,
+        avatar: _selectedAvatar,
+        identity: _selectedIdentity,
+        lang: getCurrentLang()
+      });
+
+      // 直接登入
+      loginUser(user.id, user.pin);
+    });
+
+    /* ═══════════════════════════════════════════════════════════
+       事件綁定（語系 / 語言 Splash）
+    ═══════════════════════════════════════════════════════════ */
+
+    document.querySelectorAll('.lang-card').forEach(btn => {
+      btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    });
+
+    // auth/register 頁面的浮動語言切換
+    document.getElementById('btn-switch-lang').addEventListener('click', () => {
+      showScreen('lang-screen');
+    });
+
+    /* ═══════════════════════════════════════════════════════════
+       事件綁定（主頁面 Header）
+    ═══════════════════════════════════════════════════════════ */
+
+    // 主頁 Header — 語言切換按鈕
+    document.getElementById('btn-main-lang').addEventListener('click', () => {
+      showScreen('lang-screen');
+    });
+
+    // 主頁 Header — 使用者名稱（點擊登出）
+    document.getElementById('btn-header-user').addEventListener('click', () => {
+      const user = getCurrentUser();
+      if (!user) return;
+      const msg = t('homeLogoutConfirm') || '確定要登出嗎？';
+      if (!confirm(msg)) return;
+
+      // 清除 currentUserId
+      const store = loadStore();
+      store.currentUserId = null;
+      saveStore(store);
+
+      // 隱藏緊急浮動按鈕
+      const fab = document.getElementById('emergency-fab');
+      if (fab) fab.style.display = 'none';
+
+      showScreen('auth-screen');
+      renderUserList();
+    });
+
+    /* ═══════════════════════════════════════════════════════════
+       Sub-Task 4 — 問診卡模組
+    ═══════════════════════════════════════════════════════════ */
+
+    /**
+     * 問診卡模組狀態（模組層級）
+     * _sx.step        : 1 | 2（目前步驟）
+     * _sx.partId      : 已選部位 id
+     * _sx.selectedIds : Set<string>，已選症狀 id
+     */
+    const _sx = { step: 1, partId: null, selectedIds: new Set() };
+
+    /** _symptomProgressDots(step) — 渲染步驟圓點 HTML */
+    function _symptomProgressDots(step) {
+      const dots = [1, 2, 3].map((n, i) => {
+        const active = n <= step ? ' active' : '';
+        const dot = `<span class="symptom-step-dot${active}"></span>`;
+        return i < 2 ? dot + '<span class="symptom-step-line"></span>' : dot;
+      }).join('');
+      return `<div class="symptom-steps">${dots}</div>`;
+    }
+
+    /**
+     * renderSymptomStep1()
+     * 渲染 #symptom-inner：步驟 1 — 選擇身體部位
+     */
+    function renderSymptomStep1() {
+      _sx.step = 1;
+      const lang = getCurrentLang();
+      const inner = document.getElementById('symptom-inner');
+      if (!inner) return;
+
+      // 部位卡片 HTML（最後一個「全身」跨兩欄）
+      const cardsHtml = BODY_PARTS.map((bp) => {
+        const isSelected = bp.id === _sx.partId;
+        const span2 = bp.id === 'whole' ? ' span2' : '';
+        const sel   = isSelected ? ' selected' : '';
+        return `<button class="body-part-card${span2}${sel}" data-part="${bp.id}" aria-pressed="${isSelected}">
+          <span class="bp-emoji">${bp.emoji}</span>
+          <span class="bp-name">${bp.names[lang] || bp.names.zh}</span>
+        </button>`;
+      }).join('');
+
+      inner.innerHTML = `
+        ${_symptomProgressDots(1)}
+        <p class="symptom-step-title">${t('symptomStep1Title')}</p>
+        <div class="body-part-grid">${cardsHtml}</div>
+        <div class="symptom-btn-row">
+          <button class="btn-primary" id="sx-btn-next1"
+            ${_sx.partId ? '' : 'disabled'}
+            onclick="renderSymptomStep2()">
+            ${t('symptomBtnNext')}
+          </button>
+        </div>`;
+
+      // 點選部位卡片
+      inner.querySelectorAll('.body-part-card').forEach(btn => {
+        btn.addEventListener('click', function() {
+          _sx.partId = this.dataset.part;
+          // 重繪（更新 selected 狀態 + 啟用下一步）
+          renderSymptomStep1();
+        });
+      });
+    }
+
+    /**
+     * renderSymptomStep2()
+     * 渲染 #symptom-inner：步驟 2 — 選擇症狀（最多 3 項）
+     */
+    function renderSymptomStep2() {
+      _sx.step = 2;
+      _sx.selectedIds = new Set(); // 切換到步驟2時重置
+      const lang = getCurrentLang();
+      const inner = document.getElementById('symptom-inner');
+      if (!inner) return;
+
+      function buildGrid(group) {
+        return SYMPTOMS.filter(s => s.group === group).map(s => {
+          const isSelected = _sx.selectedIds.has(s.id);
+          const sel   = isSelected ? ' selected' : '';
+          const isDisabled = !isSelected && _sx.selectedIds.size >= 3;
+          const dis   = isDisabled ? ' disabled' : '';
+          const urgent = s.urgency === 'high' ? '<span class="sc-urgent">🔴</span>' : '';
+          return `<button class="symptom-card${sel}${dis}" data-symptom="${s.id}" aria-pressed="${isSelected}">
+            ${urgent}
+            <span class="sc-emoji">${s.emoji}</span>
+            <span class="sc-name">${s.names[lang] || s.names.zh}</span>
+          </button>`;
+        }).join('');
+      }
+
+      function render() {
+        const count = _sx.selectedIds.size;
+        const countText = t('symptomSelectedCount').replace('{n}', count);
+        inner.innerHTML = `
+          ${_symptomProgressDots(2)}
+          <p class="symptom-step-title">${t('symptomStep2Title')}</p>
+          <p class="symptom-count-hint">${countText}</p>
+          <p class="symptom-group-label">${t('symptomGroupGeneral')}</p>
+          <div class="symptom-cards-grid" id="sg-general">${buildGrid('general')}</div>
+          <p class="symptom-group-label">${t('symptomGroupPain')}</p>
+          <div class="symptom-cards-grid" id="sg-pain">${buildGrid('pain')}</div>
+          <div class="symptom-btn-row">
+            <button class="btn-outline" onclick="renderSymptomStep1()">${t('symptomBtnBack')}</button>
+            <button class="btn-primary" id="sx-btn-generate"
+              ${count > 0 ? '' : 'disabled'}
+              onclick="generateMedCard()">
+              ${t('symptomBtnGenerate')}
+            </button>
+          </div>`;
+
+        // 點選症狀卡片
+        inner.querySelectorAll('.symptom-card').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = this.dataset.symptom;
+            if (_sx.selectedIds.has(id)) {
+              _sx.selectedIds.delete(id);
+            } else if (_sx.selectedIds.size < 3) {
+              _sx.selectedIds.add(id);
+            }
+            render();   // 重繪
+          });
+        });
+      }
+
+      render();
+    }
+
+    /**
+     * generateMedCard()
+     * 生成雙語出示卡並顯示 #card-modal
+     * 同時寫入 symptomHistory + 更新 familiarityScore
+     */
+    function generateMedCard() {
+      const lang  = getCurrentLang();
+      const part  = BODY_PARTS.find(p => p.id === _sx.partId);
+      const syms  = SYMPTOMS.filter(s => _sx.selectedIds.has(s.id));
+      if (!part || syms.length === 0) return;
+
+      const hasUrgent = syms.some(s => s.urgency === 'high');
+
+      // ── 母語文字 ──
+      const nativePart  = part.names[lang] || part.names.zh;
+      const nativeSyms  = syms.map(s => s.names[lang] || s.names.zh).join('、');
+      const nativeText  = `${nativePart}：${nativeSyms}`;
+
+      // ── 中文文字（永遠用 zh）──
+      const zhPart = part.names.zh;
+      const zhSyms = syms.map(s => s.names.zh).join('、');
+      const zhText = `${zhPart}：${zhSyms}`;
+
+      // 複製用純文字
+      const copyText = [
+        t('symptomCardTitle'),
+        '',
+        `[${lang !== 'zh' ? (part.names[lang] || part.names.zh) : ''}] ${nativeText}`,
+        '',
+        `[中文] 我的症狀：${zhText}`
+      ].join('\n');
+
+      // ── 填入 modal ──
+      document.getElementById('card-modal-title-text').textContent = t('symptomCardTitle');
+
+      const urgentEl = document.getElementById('card-urgent');
+      urgentEl.style.display = hasUrgent ? '' : 'none';
+      if (hasUrgent) urgentEl.textContent = t('symptomUrgentAlert');
+
+      document.getElementById('card-native-label').textContent   = t('symptomCardNative');
+      document.getElementById('card-native-content').textContent = nativeText;
+      document.getElementById('card-zh-label').textContent       = t('symptomCardZh');
+      document.getElementById('card-zh-content').textContent     = `我的症狀：${zhText}`;
+
+      const copyBtn  = document.getElementById('card-btn-copy');
+      const resetBtn = document.getElementById('card-btn-reset');
+      copyBtn.textContent  = t('symptomBtnCopy');
+      resetBtn.textContent = t('symptomBtnReset');
+
+      copyBtn.onclick = function() {
+        navigator.clipboard.writeText(copyText).then(() => {
+          const orig = this.textContent;
+          this.textContent = t('symptomCopied');
+          setTimeout(() => { this.textContent = orig; }, 1800);
+        }).catch(() => {
+          // fallback：選取文字
+          const tmp = document.createElement('textarea');
+          tmp.value = copyText;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand('copy');
+          document.body.removeChild(tmp);
+          const orig = this.textContent;
+          this.textContent = t('symptomCopied');
+          setTimeout(() => { this.textContent = orig; }, 1800);
+        });
+      };
+
+      resetBtn.onclick = function() {
+        closeCardModal();
+        _sx.partId = null;
+        _sx.selectedIds = new Set();
+        renderSymptomStep1();
+      };
+
+      // ── 開啟 modal ──
+      document.getElementById('card-modal').classList.add('open');
+
+      // ── 寫入 symptomHistory + 更新 familiarityScore ──
+      const user = getCurrentUser();
+      if (user) {
+        const history = user.symptomHistory || [];
+        history.push({
+          ts: Date.now(),
+          partId: part.id,
+          partZh: part.names.zh,
+          symptoms: syms.map(s => ({ id: s.id, zh: s.names.zh })),
+          urgent: hasUrgent
+        });
+        const oldScore = user.familiarityScore || 0;
+        const newScore = calcFamiliarityScore(
+          Object.assign({}, user, { symptomHistory: history })
+        );
+        saveUserData(user.id, { symptomHistory: history, familiarityScore: newScore });
+        // 刷新首頁圓環（若首頁已渲染）
+        renderFamiliarityChart();
+        // Sub-Task 8：段位升段偵測 & 成就檢查
+        checkRankUp(oldScore, newScore);
+        checkAchievements(getCurrentUser());
+      }
+    }
+
+    /** 關閉出示卡 Modal */
+    function closeCardModal() {
+      document.getElementById('card-modal').classList.remove('open');
+    }
+
+    /** 初始化問診卡 Tab（切換時呼叫）*/
+    function initSymptomView() {
+      _sx.partId = null;
+      _sx.selectedIds = new Set();
+      renderSymptomStep1();
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Sub-Task 5 — 勞工權益速查模組
+    ═══════════════════════════════════════════════════════════ */
+
+    /**
+     * 6 個分類的 metadata（emoji、lang key、id）
+     */
+    const LABOR_CATEGORIES = [
+      { id: 'wage',     emoji: '💰', labelKey: 'laborCategoryWage'     },
+      { id: 'hours',    emoji: '⏰', labelKey: 'laborCategoryHours'    },
+      { id: 'leave',    emoji: '🏖', labelKey: 'laborCategoryLeave'    },
+      { id: 'safety',   emoji: '⛑',  labelKey: 'laborCategorySafety'  },
+      { id: 'document', emoji: '📄', labelKey: 'laborCategoryDocument' },
+      { id: 'other',    emoji: '❓', labelKey: 'laborCategoryOther'    },
+    ];
+
+    /**
+     * renderLaborCategories()
+     * 渲染 6 張分類大卡片（兩欄格狀）。
+     */
+    function renderLaborCategories() {
+      const inner = document.getElementById('labor-inner');
+      if (!inner) return;
+      const lang = getCurrentLang();
+
+      const cardsHtml = LABOR_CATEGORIES.map(cat => `
+        <button class="category-card" data-category="${cat.id}" aria-label="${t(cat.labelKey)}">
+          <span class="category-card-emoji">${cat.emoji}</span>
+          <span class="category-card-name">${t(cat.labelKey)}</span>
+          <span class="category-card-count">${t('laborQuestionCount')}</span>
+        </button>
+      `).join('');
+
+      inner.innerHTML = `
+        <div class="labor-view-title">${t('laborTitle')}</div>
+        <p style="font-size:.82rem;color:var(--color-muted);margin-bottom:.9rem;">${t('laborSelectCategory')}</p>
+        <div class="category-grid" id="labor-category-grid">
+          ${cardsHtml}
+        </div>`;
+
+      // 點擊分類卡片 → 進入問題列表
+      inner.querySelectorAll('.category-card').forEach(btn => {
+        btn.addEventListener('click', function() {
+          renderLaborQuestions(this.dataset.category);
+        });
+      });
+    }
+
+    /**
+     * renderLaborQuestions(category)
+     * 渲染該分類的 4 題手風琴列表（含麵包屑）。
+     */
+    function renderLaborQuestions(category) {
+      const inner = document.getElementById('labor-inner');
+      if (!inner) return;
+
+      const lang   = getCurrentLang();
+      const user   = getCurrentUser();
+      const catMeta = LABOR_CATEGORIES.find(c => c.id === category);
+      if (!catMeta) return;
+
+      const questions = LABOR_QA.filter(q => q.category === category);
+      const progress  = (user && user.laborProgress) ? user.laborProgress : {};
+
+      // 合法判斷 badge class & 文字
+      function legalBadgeHtml(isLegal) {
+        const map = {
+          yes:   { cls: 'legal',   key: 'laborLegal'     },
+          no:    { cls: 'illegal', key: 'laborIllegal'   },
+          check: { cls: 'check',   key: 'laborNeedCheck' },
+        };
+        const info = map[isLegal] || map['check'];
+        return `<span class="legal-badge ${info.cls}">${t(info.key)}</span>`;
+      }
+
+      // 行動按鈕 HTML
+      function actionBtnsHtml(actions) {
+        return actions.map(action => {
+          const label = action.label[lang] || action.label.zh;
+          if (action.type === 'tel') {
+            return `<a href="tel:${action.value}" class="action-btn action-btn-tel">${label}</a>`;
+          }
+          return `<a href="${action.value}" target="_blank" rel="noopener" class="action-btn action-btn-url">${label}</a>`;
+        }).join('');
+      }
+
+      // 手風琴項目 HTML
+      const itemsHtml = questions.map(q => {
+        const isRead   = !!(progress[q.id] && progress[q.id].read);
+        const readBadge = isRead ? `<span class="question-read-badge">${t('laborRead')}</span>` : '';
+        const qText    = q.q[lang] || q.q.zh;
+        const aText    = q.a[lang] || q.a.zh;
+        const evidenceItems = q.evidence.map(e => `<li>${e}</li>`).join('');
+
+        return `
+          <div class="question-item" data-qid="${q.id}">
+            <div class="question-header" role="button" aria-expanded="false" tabindex="0">
+              <span class="question-header-text">${qText}</span>
+              ${readBadge}
+              <span class="question-chevron">›</span>
+            </div>
+            <div class="question-content" aria-hidden="true">
+              ${legalBadgeHtml(q.isLegal)}
+              <p class="question-answer">${aText}</p>
+              <div class="evidence-box">
+                <div class="evidence-box-title">${t('laborEvidenceTitle')}</div>
+                <ul class="evidence-list">${evidenceItems}</ul>
+              </div>
+              <div class="action-btns">${actionBtnsHtml(q.actions)}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      inner.innerHTML = `
+        <div class="labor-breadcrumb">
+          <span class="labor-breadcrumb-root" id="labor-breadcrumb-root">${t('laborBreadcrumbRoot')}</span>
+          <span class="labor-breadcrumb-sep">›</span>
+          <span class="labor-breadcrumb-current">${catMeta.emoji} ${t(catMeta.labelKey)}</span>
+        </div>
+        <div class="question-list" id="labor-question-list">
+          ${itemsHtml}
+        </div>`;
+
+      // 麵包屑返回
+      document.getElementById('labor-breadcrumb-root').addEventListener('click', () => {
+        renderLaborCategories();
+      });
+
+      // 手風琴展開/收合 + 自動標記已讀
+      inner.querySelectorAll('.question-item').forEach(item => {
+        const header  = item.querySelector('.question-header');
+        const qid     = item.dataset.qid;
+        header.addEventListener('click', function() {
+          const isOpen = item.classList.contains('open');
+          // 收合同一分類所有其他項目（可選：移除下一行可允許多個同時展開）
+          // inner.querySelectorAll('.question-item.open').forEach(el => el.classList.remove('open'));
+
+          item.classList.toggle('open', !isOpen);
+          header.setAttribute('aria-expanded', String(!isOpen));
+          item.querySelector('.question-content').setAttribute('aria-hidden', String(isOpen));
+
+          // 展開時標記已讀
+          if (!isOpen) {
+            markQuestionRead(qid);
+          }
+        });
+        // 鍵盤支援
+        header.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); header.click(); }
+        });
+      });
+    }
+
+    /**
+     * markQuestionRead(questionId)
+     * 寫入 user.laborProgress，重算 familiarityScore，刷新進度環。
+     */
+    function markQuestionRead(questionId) {
+      const user = getCurrentUser();
+      if (!user) return;
+
+      // 若已標記則不重複寫入
+      const progress = user.laborProgress || {};
+      if (progress[questionId] && progress[questionId].read) return;
+
+      progress[questionId] = { read: true, readAt: Date.now() };
+      const updatedUser = Object.assign({}, user, { laborProgress: progress });
+      const oldScore    = user.familiarityScore || 0;
+      const newScore    = calcFamiliarityScore(updatedUser);
+
+      saveUserData(user.id, { laborProgress: progress, familiarityScore: newScore });
+
+      // 刷新首頁進度環（若首頁已渲染）
+      renderFamiliarityChart();
+      // Sub-Task 8：段位升段偵測 & 成就檢查
+      checkRankUp(oldScore, newScore);
+      checkAchievements(getCurrentUser());
+
+      // 更新當前問題項目的已讀標記
+      const item = document.querySelector(`.question-item[data-qid="${questionId}"]`);
+      if (item) {
+        let readBadgeEl = item.querySelector('.question-read-badge');
+        if (!readBadgeEl) {
+          readBadgeEl = document.createElement('span');
+          readBadgeEl.className = 'question-read-badge';
+          const chevron = item.querySelector('.question-chevron');
+          item.querySelector('.question-header').insertBefore(readBadgeEl, chevron);
+        }
+        readBadgeEl.textContent = t('laborRead');
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Sub-Task 6 — 友善資源地圖
+    ═══════════════════════════════════════════════════════════ */
+
+    /**
+     * _makeLocIcon(type)
+     * 建立彩色圓形 divIcon
+     */
+    function _makeLocIcon(type) {
+      const cfg = MAP_TYPE_CONFIG[type] || { color: '#718096', label: '?' };
+      return L.divIcon({
+        className: '',
+        html: `<div style="
+          width:30px;height:30px;border-radius:50%;
+          background:${cfg.color};
+          border:2.5px solid #fff;
+          box-shadow:0 2px 6px rgba(0,0,0,.35);
+          display:flex;align-items:center;justify-content:center;
+          font-size:.65rem;font-weight:800;color:#fff;
+          ">${cfg.label}</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -16]
+      });
+    }
+
+    /**
+     * _makeUserIcon()
+     * 使用者位置藍色 divIcon
+     */
+    function _makeUserIcon() {
+      return L.divIcon({
+        className: '',
+        html: `<div style="
+          width:18px;height:18px;border-radius:50%;
+          background:#2563eb;
+          border:3px solid #fff;
+          box-shadow:0 0 0 4px rgba(37,99,235,.35);
+          "></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+    }
+
+    /**
+     * _distKm(lat1, lng1, lat2, lng2)
+     * Haversine 距離（公里）
+     */
+    function _distKm(lat1, lng1, lat2, lng2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 +
+                Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+                Math.sin(dLng/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    /**
+     * _buildPopupHtml(loc)
+     * 建立 Popup HTML：名稱、電話、語言 badge、開放時間
+     */
+    function _buildPopupHtml(loc) {
+      const lang = getCurrentLang();
+      const name = loc.names[lang] || loc.names.zh;
+      const cfg  = MAP_TYPE_CONFIG[loc.type] || {};
+
+      const langBadges = (loc.languages || []).map(l =>
+        `<span style="display:inline-block;padding:.1rem .35rem;border-radius:4px;
+          background:rgba(0,0,0,.07);font-size:.7rem;font-weight:700;margin:1px;">${l.toUpperCase()}</span>`
+      ).join('');
+
+      return `
+        <div style="min-width:200px;font-family:var(--font-main);">
+          <div style="font-size:.92rem;font-weight:800;color:${cfg.color || '#333'};margin-bottom:.3rem;">${name}</div>
+          <div style="font-size:.76rem;color:#555;margin-bottom:.25rem;">📍 ${loc.address}</div>
+          <div style="font-size:.76rem;color:#555;margin-bottom:.3rem;">🕐 ${loc.hours}</div>
+          <div style="margin-bottom:.35rem;">${langBadges}</div>
+          <a href="tel:${loc.phone}" style="display:inline-block;padding:.3rem .75rem;
+            background:${cfg.color || '#FF6B35'};color:#fff;border-radius:8px;
+            font-size:.82rem;font-weight:700;text-decoration:none;">📞 ${loc.phone}</a>
+        </div>`;
+    }
+
+    /**
+     * initMap()
+     * 初始化 Leaflet 地圖，優先使用 user.lastLocation，否則高雄市中心
+     */
+    function initMap() {
+      if (_mapState.initialized) return;
+      if (typeof L === 'undefined') {
+        const listEl = document.getElementById('map-location-list');
+        if (listEl) listEl.innerHTML = `<p style="padding:1rem;color:var(--color-muted);">${t('mapOffline')}</p>`;
+        return;
+      }
+
+      const user = getCurrentUser();
+      const defaultCenter = [22.6273, 120.3014];
+      let center = defaultCenter;
+      if (user && user.lastLocation && user.lastLocation.lat) {
+        center = [user.lastLocation.lat, user.lastLocation.lng];
+      }
+
+      const map = L.map('leaflet-map', {
+        center: center,
+        zoom: 12,
+        zoomControl: true
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      _mapState.map = map;
+      _mapState.initialized = true;
+
+      // 建立所有 marker（與 LOCATIONS 一一對應）
+      LOCATIONS.forEach((loc, i) => {
+        const marker = L.marker([loc.lat, loc.lng], { icon: _makeLocIcon(loc.type) })
+          .addTo(map)
+          .bindPopup(_buildPopupHtml(loc), { maxWidth: 260 });
+
+        const circle = L.circle([loc.lat, loc.lng], {
+          radius: 200,
+          color: MAP_TYPE_CONFIG[loc.type]?.color || '#888',
+          fillColor: MAP_TYPE_CONFIG[loc.type]?.color || '#888',
+          fillOpacity: 0.12,
+          weight: 1.5
+        }).addTo(map);
+
+        _mapState.markers.push(marker);
+        _mapState.circles.push(circle);
+      });
+
+      // 渲染機構列表（預設全部）
+      renderLocationList('all');
+    }
+
+    /**
+     * renderMapMarkers(filter)
+     * 根據 filter 顯示 / 隱藏對應的 marker 與圓圈
+     * filter: 'all' | 'medical' | 'legal' | 'newcomer'
+     */
+    function renderMapMarkers(filter) {
+      LOCATIONS.forEach((loc, i) => {
+        const show = filter === 'all' || loc.type === filter;
+        const marker = _mapState.markers[i];
+        const circle = _mapState.circles[i];
+        if (!marker || !circle) return;
+        if (show) {
+          if (!_mapState.map.hasLayer(marker)) marker.addTo(_mapState.map);
+          if (!_mapState.map.hasLayer(circle)) circle.addTo(_mapState.map);
+          // 更新 popup 語言
+          marker.setPopupContent(_buildPopupHtml(loc));
+        } else {
+          if (_mapState.map.hasLayer(marker)) _mapState.map.removeLayer(marker);
+          if (_mapState.map.hasLayer(circle)) _mapState.map.removeLayer(circle);
+        }
+      });
+    }
+
+    /**
+     * renderLocationList(filter, nearbyIds)
+     * 渲染底部機構列表
+     * nearbyIds: Set<string>（選填），此 id 的卡片標示為「最近」
+     */
+    function renderLocationList(filter, nearbyIds) {
+      const listEl = document.getElementById('map-location-list');
+      if (!listEl) return;
+
+      const lang = getCurrentLang();
+      const nearby = nearbyIds || new Set();
+
+      // 若有 nearby 機構，先顯示 nearby 標題 + nearby 機構
+      let nearbyHtml = '';
+      let mainList = LOCATIONS;
+
+      if (nearby.size > 0) {
+        const nearbyItems = LOCATIONS.filter(loc => nearby.has(loc.id));
+        const nearbyCards = nearbyItems.map(loc => _locationCardHtml(loc, lang, true)).join('');
+        nearbyHtml = `<p class="map-nearby-label">${t('mapNearby')}</p>${nearbyCards}`;
+        mainList = LOCATIONS.filter(loc =>
+          (filter === 'all' || loc.type === filter) && !nearby.has(loc.id)
+        );
+      } else {
+        mainList = LOCATIONS.filter(loc => filter === 'all' || loc.type === filter);
+      }
+
+      const mainCards = mainList.map(loc => _locationCardHtml(loc, lang, false)).join('');
+      listEl.innerHTML = nearbyHtml + mainCards;
+
+      // 卡片點擊：flyTo + 開啟 popup
+      listEl.querySelectorAll('.location-card').forEach(card => {
+        card.addEventListener('click', function() {
+          const id  = this.dataset.locId;
+          const idx = LOCATIONS.findIndex(l => l.id === id);
+          if (idx === -1 || !_mapState.map) return;
+          const loc = LOCATIONS[idx];
+          _mapState.map.flyTo([loc.lat, loc.lng], 16, { duration: 0.8 });
+          setTimeout(() => _mapState.markers[idx] && _mapState.markers[idx].openPopup(), 900);
+        });
+      });
+    }
+
+    /**
+     * _locationCardHtml(loc, lang, isNearby)
+     * 建立機構卡片 HTML
+     */
+    function _locationCardHtml(loc, lang, isNearby) {
+      const name = loc.names[lang] || loc.names.zh;
+      const nearbyBadge = isNearby
+        ? `<span class="location-card-nearby-badge">📍 近</span>` : '';
+      return `
+        <div class="location-card${isNearby ? ' nearby' : ''}" data-loc-id="${loc.id}">
+          <div class="location-card-stripe stripe-${loc.type}"></div>
+          <div class="location-card-body">
+            <div class="location-card-header">
+              <span class="location-card-name">${name}</span>
+              ${nearbyBadge}
+            </div>
+            <div class="location-card-address">📍 ${loc.address}</div>
+            <div class="location-card-phone">📞 ${loc.phone}</div>
+          </div>
+        </div>`;
+    }
+
+    /**
+     * setMapFilter(filter)
+     * 切換篩選 Tab，更新 marker 與列表
+     */
+    function setMapFilter(filter) {
+      _mapState.currentFilter = filter;
+      // 更新 Tab active 狀態
+      document.querySelectorAll('.map-filter-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+      if (_mapState.initialized) {
+        renderMapMarkers(filter);
+        renderLocationList(filter);
+      }
+    }
+
+    /**
+     * locateMe()
+     * 使用 Geolocation API 定位，儲存至 user，更新地圖與列表
+     */
+    function locateMe() {
+      if (!navigator.geolocation) {
+        alert(t('mapOffline'));
+        return;
+      }
+      const btn = document.getElementById('map-locate-btn');
+      if (btn) { btn.disabled = true; btn.style.opacity = '.7'; }
+
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          if (!_mapState.map) return;
+
+          // 跳至使用者位置
+          _mapState.map.flyTo([lat, lng], 14, { duration: 1 });
+
+          // 移除舊 userMarker，建立新的
+          if (_mapState.userMarker) _mapState.map.removeLayer(_mapState.userMarker);
+          _mapState.userMarker = L.marker([lat, lng], { icon: _makeUserIcon(), zIndexOffset: 1000 })
+            .addTo(_mapState.map)
+            .bindPopup('📍 你的位置')
+            .openPopup();
+
+          // 儲存至 user.lastLocation
+          const user = getCurrentUser();
+          if (user) {
+            saveUserData(user.id, {
+              lastLocation: { lat, lng, timestamp: Date.now() }
+            });
+            // 更新首頁最近位置
+            renderFamiliarityChart();
+          }
+
+          // 計算最近 3 個機構
+          const sorted = LOCATIONS
+            .map(loc => ({ loc, dist: _distKm(lat, lng, loc.lat, loc.lng) }))
+            .sort((a, b) => a.dist - b.dist)
+            .slice(0, 3);
+
+          const nearbyIds = new Set(sorted.map(x => x.loc.id));
+          renderLocationList(_mapState.currentFilter, nearbyIds);
+
+          // 滾到列表頂部
+          const listEl = document.getElementById('map-location-list');
+          if (listEl) listEl.scrollTop = 0;
+        },
+        function() {
+          if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+          alert(t('mapOffline'));
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      );
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Sub-Task 8 — 成就機制 & 排名系統
+    ═══════════════════════════════════════════════════════════ */
+
+    /* ---- 輔助函式 ---- */
+
+    /**
+     * calcStreakDays(user)
+     * 從 landmarksVisited 取出唯一日期字串，計算最長連續天數。
+     */
+    function calcStreakDays(user) {
+      const visited = (user.gameStats && user.gameStats.landmarksVisited) || [];
+      if (visited.length === 0) return 0;
+
+      // 收集唯一日期（yyyy-mm-dd 字串）
+      const days = [...new Set(
+        visited.map(v => new Date(v.ts).toLocaleDateString('sv-SE'))
+      )].sort();
+
+      if (days.length === 0) return 0;
+
+      let maxStreak = 1;
+      let cur = 1;
+      for (let i = 1; i < days.length; i++) {
+        const prev = new Date(days[i - 1]);
+        const curr = new Date(days[i]);
+        const diff = (curr - prev) / 86400000; // ms → 天
+        if (diff === 1) {
+          cur++;
+          if (cur > maxStreak) maxStreak = cur;
+        } else {
+          cur = 1;
+        }
+      }
+      return maxStreak;
+    }
+
+    /**
+     * hasPerfectGame(user)
+     * 檢查 gameStats.hasPerfect 旗標。
+     */
+    function hasPerfectGame(user) {
+      return !!(user.gameStats && user.gameStats.hasPerfect);
+    }
+
+    /* ---- 10 個成就定義 ---- */
+    const ACHIEVEMENTS = [
+      { id: 'first_game',     emoji: '🎮', condition: u => (u.gameStats.totalPlayed  || 0) >= 1 },
+      { id: 'first_card',     emoji: '💊', condition: u => (u.symptomHistory.length  || 0) >= 1 },
+      { id: 'labor_explorer', emoji: '📖', condition: u => Object.keys(u.laborProgress).length >= 10 },
+      { id: 'labor_master',   emoji: '🏛', condition: u => Object.keys(u.laborProgress).length >= 24 },
+      { id: 'landmark_3',     emoji: '📍', condition: u => new Set((u.gameStats.landmarksVisited || []).map(v => v.id)).size >= 3 },
+      { id: 'landmark_all',   emoji: '🗺', condition: u => new Set((u.gameStats.landmarksVisited || []).map(v => v.id)).size >= 13 },
+      { id: 'score_40',       emoji: '🌳', condition: u => (u.familiarityScore || 0) >= 40 },
+      { id: 'score_80',       emoji: '🏆', condition: u => (u.familiarityScore || 0) >= 80 },
+      { id: 'streak_3',       emoji: '🔥', condition: u => calcStreakDays(u) >= 3 },
+      { id: 'perfect_game',   emoji: '⭐', condition: u => hasPerfectGame(u) }
+    ];
+
+    /* ---- 主要成就函式 ---- */
+
+    /**
+     * checkAchievements(user)
+     * 掃描所有成就條件，新解鎖的逐一慶祝並存檔，最後重新渲染格子。
+     */
+    function checkAchievements(user) {
+      if (!user) return;
+
+      const alreadyIds = ((user.gameStats && user.gameStats.achievements) || []).map(a => a.id);
+      const newlyUnlocked = [];
+
+      for (const ach of ACHIEVEMENTS) {
+        if (alreadyIds.includes(ach.id)) continue;
+        try {
+          if (ach.condition(user)) newlyUnlocked.push(ach);
+        } catch (_) { /* 欄位不齊全時跳過 */ }
+      }
+
+      if (newlyUnlocked.length > 0) {
+        const achievements = [...(user.gameStats.achievements || [])];
+        const now = Date.now();
+        newlyUnlocked.forEach(a => achievements.push({ id: a.id, unlockedAt: now }));
+        saveUserData(user.id, {
+          gameStats: Object.assign({}, user.gameStats, { achievements })
+        });
+        // 逐一排隊顯示（使用 setTimeout 間隔）
+        newlyUnlocked.forEach(function(a, i) {
+          setTimeout(function() { showAchievementCelebration(a); }, i * 3600);
+        });
+      }
+      renderAchievements();
+    }
+
+    /**
+     * renderAchievements()
+     * 渲染 #achievement-grid 的 10 個成就格子。
+     */
+    function renderAchievements() {
+      const grid = document.getElementById('achievement-grid');
+      if (!grid) return;
+
+      const user = getCurrentUser();
+      const unlockedMap = {};
+      if (user && user.gameStats && user.gameStats.achievements) {
+        user.gameStats.achievements.forEach(a => { unlockedMap[a.id] = a.unlockedAt; });
+      }
+
+      grid.innerHTML = ACHIEVEMENTS.map(ach => {
+        const isUnlocked = ach.id in unlockedMap;
+        const name = t('ach_' + ach.id);
+        const cellClass = 'ach-cell ' + (isUnlocked ? 'unlocked' : 'locked');
+        let tooltipHtml = '';
+        if (isUnlocked) {
+          const dateStr = new Date(unlockedMap[ach.id]).toLocaleDateString();
+          tooltipHtml = `<span class="ach-tooltip">${t('achUnlockedAt')} ${dateStr}</span>`;
+        }
+        return `<div class="${cellClass}" tabindex="${isUnlocked ? '0' : '-1'}" aria-label="${name}${isUnlocked ? '' : ' (' + t('achLocked') + ')'}">
+          <span class="ach-cell-emoji">${ach.emoji}</span>
+          <span class="ach-cell-name">${name}</span>
+          ${tooltipHtml}
+        </div>`;
+      }).join('');
+    }
+
+    /**
+     * showAchievementCelebration(ach)
+     * 顯示全螢幕慶祝 Modal，3 秒後自動消失。
+     */
+    function showAchievementCelebration(ach) {
+      const modal   = document.getElementById('achievement-modal');
+      const emojiEl = document.getElementById('ach-emoji');
+      const nameEl  = document.getElementById('ach-name');
+      const timeEl  = document.getElementById('ach-time');
+      if (!modal || !emojiEl || !nameEl || !timeEl) return;
+
+      emojiEl.textContent = ach.emoji;
+      nameEl.textContent  = t('ach_' + ach.id);
+      timeEl.textContent  = t('achUnlockedAt') + ' ' + new Date().toLocaleString();
+
+      // 重新觸發 bounceIn 動畫（移除後再加回）
+      const card = modal.querySelector('.achievement-celebration');
+      if (card) {
+        card.style.animation = 'none';
+        card.offsetHeight; // reflow
+        card.style.animation = '';
+      }
+
+      modal.classList.remove('hidden');
+
+      // 3 秒後自動消失
+      if (modal._autoClose) clearTimeout(modal._autoClose);
+      modal._autoClose = setTimeout(closeAchievementModal, 3000);
+    }
+
+    function closeAchievementModal() {
+      const modal = document.getElementById('achievement-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        if (modal._autoClose) { clearTimeout(modal._autoClose); modal._autoClose = null; }
+      }
+    }
+
+    /* ---- 段位升段偵測 ---- */
+
+    /**
+     * checkRankUp(oldScore, newScore)
+     * 若排名段位有升等，顯示金色橫幅 Toast。
+     */
+    function checkRankUp(oldScore, newScore) {
+      const oldRank = getRank(oldScore);
+      const newRank = getRank(newScore);
+      if (oldRank.key !== newRank.key) {
+        showRankUpToast(newRank);
+      }
+    }
+
+    /**
+     * showRankUpToast(rank)
+     * 頂部滑入的升段提示橫幅（金色背景），3 秒後自動消失。
+     */
+    function showRankUpToast(rank) {
+      const toast = document.getElementById('rankup-toast');
+      if (!toast) return;
+      toast.textContent = '🎉 ' + t('rankUpTitle') + ' ' + rank.emoji + ' ' + t(rank.key);
+      toast.classList.add('visible');
+      if (toast._autoHide) clearTimeout(toast._autoHide);
+      toast._autoHide = setTimeout(function() {
+        toast.classList.remove('visible');
+      }, 3000);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       Sub-Task 7 — 地標遊戲系統
+    ═══════════════════════════════════════════════════════════ */
+
+    /** GPS 掃描計時器 */
+    let _gpsWatchInterval = null;
+
+    /** 目前觸發遊戲的地標 & 題目 */
+    let _currentGameLandmark = null;
+    let _currentGameQuestion = null;
+
+    /** 遊戲 B 排序狀態 */
+    let _sortItems = [];
+
+    /**
+     * calcDistance(lat1, lng1, lat2, lng2)
+     * Haversine 距離（公里），複用 _distKm 的邏輯
+     */
+    function calcDistance(lat1, lng1, lat2, lng2) {
+      return _distKm(lat1, lng1, lat2, lng2);
+    }
+
+    /* ---- GPS 掃描服務 ---- */
+
+    function startGpsWatch() {
+      if (_gpsWatchInterval) return;
+      _gpsWatchInterval = setInterval(scanNearbyLandmarks, 30000);
+      scanNearbyLandmarks(); // 立即掃描一次
+    }
+
+    function stopGpsWatch() {
+      if (_gpsWatchInterval) {
+        clearInterval(_gpsWatchInterval);
+        _gpsWatchInterval = null;
+      }
+      dismissToast();
+    }
+
+    function scanNearbyLandmarks() {
+      const user = getCurrentUser();
+      if (!user || !user.gameEnabled) return;
+      if (!navigator.geolocation) return;
+
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const today = new Date().toDateString();
+
+        for (const loc of LOCATIONS) {
+          if (!loc.isLandmark) continue;
+          const dist = calcDistance(lat, lng, loc.lat, loc.lng);
+          if (dist > 0.2) continue; // 200m
+
+          // 檢查今天是否已觸發
+          const freshUser = getCurrentUser(); // 重新讀取（避免 stale closure）
+          const visited = (freshUser && freshUser.gameStats && freshUser.gameStats.landmarksVisited) || [];
+          const already = visited.some(
+            function(v) { return v.id === loc.id && new Date(v.ts).toDateString() === today; }
+          );
+          if (already) continue;
+
+          showGameToast(loc);
+          break; // 每次只觸發一個
+        }
+      }, null, { enableHighAccuracy: false, timeout: 10000 });
+    }
+
+    /* ---- Toast 通知條 ---- */
+
+    function showGameToast(loc) {
+      _currentGameLandmark = loc;
+      const lang = getCurrentLang();
+      const locName = loc.names[lang] || loc.names.zh;
+
+      const toastEl  = document.getElementById('game-toast');
+      const textEl   = document.getElementById('toast-text');
+      const startBtn = document.getElementById('toast-start-btn');
+      const dismissBtn = document.getElementById('toast-dismiss-btn');
+      if (!toastEl) return;
+
+      textEl.textContent   = t('gameToastTitle') + ' ' + locName;
+      startBtn.textContent = t('gameStart');
+      dismissBtn.textContent = t('gameClose');
+
+      toastEl.classList.remove('hidden');
+      // 讓 display:flex 先生效再加 visible，確保動畫正常觸發
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          toastEl.classList.add('visible');
+        });
+      });
+    }
+
+    function dismissToast() {
+      const toastEl = document.getElementById('game-toast');
+      if (!toastEl) return;
+      toastEl.classList.remove('visible');
+      // 等動畫結束再隱藏
+      setTimeout(function() { toastEl.classList.add('hidden'); }, 350);
+    }
+
+    /* ---- 遊戲 Modal ---- */
+
+    function openGameModal() {
+      dismissToast();
+      if (!_currentGameLandmark) return;
+      launchGame(_currentGameLandmark.id);
+      document.getElementById('game-modal').classList.remove('hidden');
+    }
+
+    function closeGameModal() {
+      document.getElementById('game-modal').classList.add('hidden');
+      document.getElementById('game-result').classList.add('hidden');
+      document.getElementById('game-content').innerHTML = '';
+    }
+
+    /* ---- 遊戲主流程 ---- */
+
+    function launchGame(landmarkId) {
+      const lang = getCurrentLang();
+
+      // 過濾該 landmark 的題目
+      let pool = GAME_QUESTIONS.filter(function(q) { return q.landmark_id === landmarkId; });
+      if (pool.length === 0) pool = GAME_QUESTIONS; // fallback：全部
+
+      // 隨機選一題
+      const q = pool[Math.floor(Math.random() * pool.length)];
+      _currentGameQuestion = q;
+
+      // 更新 Header
+      const loc = _currentGameLandmark;
+      if (loc) {
+        const locName = loc.names[lang] || loc.names.zh;
+        document.getElementById('game-landmark-name').textContent = t('gameLandmarkName') + '：' + locName;
+      }
+      document.getElementById('game-distance').textContent = '';
+      document.getElementById('game-result').classList.add('hidden');
+
+      // 依遊戲類型渲染
+      if (q.type === 'A') renderGameA(q);
+      else if (q.type === 'B') renderGameB(q);
+      else renderGameC(q);
+    }
+
+    /* ---- 遊戲 A — 閃卡配對 ---- */
+
+    function renderGameA(q) {
+      const lang = getCurrentLang();
+      const content = document.getElementById('game-content');
+      if (!content) return;
+
+      const optionsHtml = q.options.map(function(opt, i) {
+        return '<button class="game-option-btn" data-idx="' + i + '">' +
+          (opt[lang] || opt.zh) + '</button>';
+      }).join('');
+
+      content.innerHTML =
+        '<div class="game-a-emoji">' + q.image_emoji + '</div>' +
+        '<p class="game-a-question">' + (q.q[lang] || q.q.zh) + '</p>' +
+        '<div class="game-options">' + optionsHtml + '</div>';
+
+      content.querySelectorAll('.game-option-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const idx = parseInt(this.dataset.idx);
+          const correct = idx === q.answer;
+          // 標記所有按鈕
+          content.querySelectorAll('.game-option-btn').forEach(function(b) {
+            b.disabled = true;
+            const bi = parseInt(b.dataset.idx);
+            if (bi === q.answer) b.classList.add('correct');
+            else if (bi === idx && !correct) b.classList.add('wrong');
+          });
+          submitAnswer(correct, q);
+        });
+      });
+    }
+
+    /* ---- 遊戲 B — 緊急排序 ---- */
+
+    function renderGameB(q) {
+      const lang = getCurrentLang();
+      const content = document.getElementById('game-content');
+      if (!content) return;
+
+      // 初始化排序陣列（複製 items 陣列，隨機打亂）
+      _sortItems = q.items.slice().sort(function() { return Math.random() - 0.5; });
+
+      function buildSortHtml() {
+        return _sortItems.map(function(item, i) {
+          const label = item.label[lang] || item.label.zh;
+          const upDis  = i === 0 ? ' disabled' : '';
+          const dnDis  = i === _sortItems.length - 1 ? ' disabled' : '';
+          return '<div class="game-sort-item" data-id="' + item.id + '">' +
+            '<span class="game-sort-rank">' + (i + 1) + '</span>' +
+            '<span class="game-sort-emoji">' + item.emoji + '</span>' +
+            '<span class="game-sort-label">' + label + '</span>' +
+            '<div class="game-sort-btns">' +
+              '<button class="game-sort-btn btn-up"' + upDis + ' data-i="' + i + '">⬆️</button>' +
+              '<button class="game-sort-btn btn-dn"' + dnDis + ' data-i="' + i + '">⬇️</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      function render() {
+        content.innerHTML =
+          '<p class="game-b-question">' + (q.q[lang] || q.q.zh) + '</p>' +
+          '<p class="game-b-instruct">' + t('gameSortInstruct') + '</p>' +
+          '<div class="game-sort-list" id="sort-list">' + buildSortHtml() + '</div>' +
+          '<button class="btn-confirm-sort" id="btn-confirm-sort">' + t('gameConfirmSort') + '</button>';
+
+        content.querySelectorAll('.btn-up').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const i = parseInt(this.dataset.i);
+            if (i > 0) {
+              const tmp = _sortItems[i - 1];
+              _sortItems[i - 1] = _sortItems[i];
+              _sortItems[i] = tmp;
+              render();
+            }
+          });
+        });
+        content.querySelectorAll('.btn-dn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            const i = parseInt(this.dataset.i);
+            if (i < _sortItems.length - 1) {
+              const tmp = _sortItems[i + 1];
+              _sortItems[i + 1] = _sortItems[i];
+              _sortItems[i] = tmp;
+              render();
+            }
+          });
+        });
+        document.getElementById('btn-confirm-sort').addEventListener('click', function() {
+          const userOrder = _sortItems.map(function(item) { return item.id; });
+          const correct = JSON.stringify(userOrder) === JSON.stringify(q.answer);
+          // 禁用所有按鈕
+          content.querySelectorAll('.game-sort-btn').forEach(function(b) { b.disabled = true; });
+          document.getElementById('btn-confirm-sort').disabled = true;
+          submitAnswer(correct, q);
+        });
+      }
+
+      render();
+    }
+
+    /* ---- 遊戲 C — 情境填空 ---- */
+
+    function renderGameC(q) {
+      const lang = getCurrentLang();
+      const content = document.getElementById('game-content');
+      if (!content) return;
+
+      // 把 ___ 替換為 <span class="blank">___</span>
+      const sentence = (q.sentence[lang] || q.sentence.zh)
+        .replace('___', '<span class="blank">___</span>');
+
+      const optionsHtml = q.options.map(function(opt, i) {
+        return '<button class="game-c-option-btn" data-idx="' + i + '">' +
+          (opt[lang] || opt.zh) + '</button>';
+      }).join('');
+
+      content.innerHTML =
+        '<p class="game-c-instruct">' + t('gameFillInstruct') + '</p>' +
+        '<div class="game-c-sentence">' + sentence + '</div>' +
+        '<div class="game-c-options">' + optionsHtml + '</div>';
+
+      content.querySelectorAll('.game-c-option-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const idx = parseInt(this.dataset.idx);
+          const correct = idx === q.answer;
+          content.querySelectorAll('.game-c-option-btn').forEach(function(b) {
+            b.disabled = true;
+            const bi = parseInt(b.dataset.idx);
+            if (bi === q.answer) b.classList.add('correct');
+            else if (bi === idx && !correct) b.classList.add('wrong');
+          });
+          // 若答對，填空格內容也更新
+          const blankEl = content.querySelector('.blank');
+          if (blankEl) {
+            const chosen = q.options[idx];
+            blankEl.textContent = chosen[lang] || chosen.zh;
+          }
+          submitAnswer(correct, q);
+        });
+      });
+    }
+
+    /* ---- 提交答案 & 更新統計 ---- */
+
+    function submitAnswer(isCorrect, q) {
+      const lang = getCurrentLang();
+      const resultEl = document.getElementById('game-result');
+      if (!resultEl) return;
+
+      // 顯示結果 Banner
+      const banner = isCorrect ? t('gameCorrect') : t('gameWrong');
+      const bannerClass = isCorrect ? 'correct-banner' : 'wrong-banner';
+      const explain = (q.explain && (q.explain[lang] || q.explain.zh)) || '';
+
+      // 更新 user 資料
+      const user = getCurrentUser();
+      let scoreText = '';
+      if (user) {
+        const gs = user.gameStats || { totalPlayed: 0, totalCorrect: 0, landmarksVisited: [], achievements: [] };
+        gs.totalPlayed  = (gs.totalPlayed  || 0) + 1;
+        gs.totalCorrect = (gs.totalCorrect || 0) + (isCorrect ? 1 : 0);
+
+        // perfect game 旗標：本局全對（totalCorrect === totalPlayed 且本次答對）
+        if (isCorrect && gs.totalCorrect === gs.totalPlayed) {
+          gs.hasPerfect = true;
+        }
+
+        // 記錄地標造訪（若本局對應地標且尚未記錄今天）
+        if (_currentGameLandmark) {
+          const today = new Date().toDateString();
+          const visited = gs.landmarksVisited || [];
+          const todayVisited = visited.some(function(v) {
+            return v.id === _currentGameLandmark.id && new Date(v.ts).toDateString() === today;
+          });
+          if (!todayVisited) {
+            visited.push({ id: _currentGameLandmark.id, ts: Date.now() });
+            gs.landmarksVisited = visited;
+          }
+        }
+
+        const updatedUser = Object.assign({}, user, { gameStats: gs });
+        const oldScore = user.familiarityScore || 0;
+        const newScore = calcFamiliarityScore(updatedUser);
+        saveUserData(user.id, { gameStats: gs, familiarityScore: newScore });
+        renderFamiliarityChart();
+        // Sub-Task 8：段位升段偵測 & 成就檢查
+        checkRankUp(oldScore, newScore);
+        checkAchievements(getCurrentUser());
+
+        scoreText = t('gameScore')
+          .replace('{correct}', gs.totalCorrect)
+          .replace('{total}',   gs.totalPlayed);
+      }
+
+      resultEl.innerHTML =
+        '<div class="game-result-banner ' + bannerClass + '">' + banner + '</div>' +
+        (explain ? '<div class="game-result-explain">' + explain + '</div>' : '') +
+        (scoreText ? '<p class="game-result-score">' + scoreText + '</p>' : '') +
+        '<p class="game-result-close-hint">3 秒後自動關閉…</p>';
+      resultEl.classList.remove('hidden');
+
+      // 捲動到結果區
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // 3 秒後自動關閉
+      setTimeout(function() { closeGameModal(); }, 3000);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       頁面載入
+    ═══════════════════════════════════════════════════════════ */
+    (function init() {
+      const saved = localStorage.getItem('migrant_lang');
+      const user  = getCurrentUser();
+
+      // Sub-Task 4：出示卡 Modal 關閉按鈕 & 背景點擊關閉
+      const cardModal = document.getElementById('card-modal');
+      document.getElementById('card-modal-close').addEventListener('click', closeCardModal);
+      cardModal.addEventListener('click', function(e) {
+        if (e.target === cardModal) closeCardModal();
+      });
+
+      if (user) {
+        // 已有登入狀態 → 直接進主頁
+        applyLang();
+        renderHomePage();
+        showScreen('main-screen');
+        // Sub-Task 7：若遊戲開啟，自動啟動 GPS 掃描
+        if (user.gameEnabled !== false) {
+          startGpsWatch();
+        }
+      } else if (saved && LANG_DATA[saved]) {
+        applyLang();
+        showScreen('auth-screen');
+        renderUserList();
+      } else {
+        applyLang();
+        showScreen('lang-screen');
+      }
+    })();
+
+    // ===== PWA: iOS 安裝引導 =====
+    (function () {
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isStandalone = window.navigator.standalone;
+      const hasShownTip = localStorage.getItem('ios_tip_shown');
+      if (isIOS && !isStandalone && !hasShownTip) {
+        const tip = document.getElementById('ios-install-tip');
+        if (tip) tip.classList.remove('hidden');
+        localStorage.setItem('ios_tip_shown', '1');
+      }
+    })();
+
+    // ===== PWA: 離線偵測 =====
+    window.addEventListener('online',  () => {
+      document.getElementById('offline-banner').classList.add('hidden');
+    });
+    window.addEventListener('offline', () => {
+      document.getElementById('offline-banner').classList.remove('hidden');
+    });
+    if (!navigator.onLine) {
+      document.getElementById('offline-banner').classList.remove('hidden');
+    }
+
+    // ===== PWA: Service Worker 註冊 =====
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('[SW] Registered:', reg.scope))
+          .catch(err => console.warn('[SW] Registration failed:', err));
+      });
+    }
+  </script>
+
+</body>
+</html>

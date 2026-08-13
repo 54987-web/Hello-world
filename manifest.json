@@ -1,0 +1,32 @@
+{
+  "name": "MigrantCare Kaohsiung",
+  "short_name": "MigrantCare",
+  "description": "多語系外籍移工求助平台 | Migrant Worker Support App",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FF6B35",
+  "theme_color": "#FF6B35",
+  "lang": "zh-TW",
+  "categories": ["medical", "social", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
