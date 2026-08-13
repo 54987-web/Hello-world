@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#FF6B35" />
+  <meta name="theme-color" content="#2B6CB0" />
   <title>MigrantCare Kaohsiung</title>
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -43,25 +43,53 @@
 
     /* ===== CSS 變數 ===== */
     :root {
-      --color-primary:   #FF6B35;
-      --color-primary-d: #E55A24;
-      --color-navy:      #1B4F72;
-      --color-navy-d:    #154260;
-      --color-bg:        #F8FAFC;
+      /* ── 主色：醫療藍 / 警政藍 ── */
+      --color-primary:   #2B6CB0;
+      --color-primary-d: #2558a0;
+      --color-primary-l: #EBF4FF;
+
+      /* ── 輔助色：暖心橘（CTA 按鈕專用） ── */
+      --color-cta:       #DD6B20;
+      --color-cta-d:     #C05621;
+      --color-cta-l:     #FFFAF0;
+
+      /* ── 深藍（標題 / 強調文字） ── */
+      --color-navy:      #1A365D;
+      --color-navy-d:    #153053;
+
+      /* ── 背景 / 介面 ── */
+      --color-bg:        #F7FAFC;
       --color-surface:   #FFFFFF;
       --color-border:    #E2E8F0;
+      --color-border-l:  #EDF2F7;
+
+      /* ── 文字 ── */
       --color-text:      #1A202C;
-      --color-muted:     #718096;
-      --color-success:   #38A169;
-      --color-danger:    #E53E3E;
+      --color-muted:     #4A5568;
+      --color-faint:     #718096;
 
-      --radius-card:  16px;
-      --radius-btn:   12px;
-      --shadow-card:  0 2px 12px rgba(0,0,0,.10);
-      --shadow-btn:   0 4px 14px rgba(255,107,53,.35);
+      /* ── 狀態色 ── */
+      --color-success:   #276749;
+      --color-success-l: #F0FFF4;
+      --color-danger:    #C53030;
+      --color-danger-l:  #FFF5F5;
+      --color-warn:      #B7791F;
+      --color-warn-l:    #FFFFF0;
 
+      /* ── 形狀 ── */
+      --radius-card:  18px;
+      --radius-btn:   14px;
+      --radius-pill:  999px;
+
+      /* ── 陰影 ── */
+      --shadow-card:  0 2px 16px rgba(43,108,176,.10), 0 1px 4px rgba(0,0,0,.06);
+      --shadow-btn:   0 4px 14px rgba(43,108,176,.30);
+      --shadow-cta:   0 4px 14px rgba(221,107,32,.35);
+
+      /* ── 字型 ── */
       --font-main: -apple-system, "Noto Sans TC", "Noto Sans", "Segoe UI",
                    "Helvetica Neue", Arial, sans-serif;
+      --font-size-base: 16px;
       --transition: .18s ease;
     }
 
@@ -92,30 +120,56 @@
     }
 
     /* ===== 通用按鈕 ===== */
+    /* 主要按鈕：醫療藍（導覽 / 確認用） */
     .btn-primary {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: .45rem;
-      padding: .85rem 1.6rem;
+      gap: .5rem;
+      padding: .9rem 1.6rem;
       background: var(--color-primary);
       color: #fff;
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 700;
       border: none;
       border-radius: var(--radius-btn);
       cursor: pointer;
+      min-height: 52px;        /* Thumb-Friendly */
       box-shadow: var(--shadow-btn);
       transition: background var(--transition), transform var(--transition);
       -webkit-tap-highlight-color: transparent;
+      letter-spacing: .01em;
     }
     .btn-primary:active { transform: scale(.96); background: var(--color-primary-d); }
+
+    /* CTA 按鈕：暖心橘（立即求助 / 生成問診卡 等緊急操作） */
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      padding: .9rem 1.6rem;
+      background: var(--color-cta);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      min-height: 52px;
+      box-shadow: var(--shadow-cta);
+      transition: background var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      letter-spacing: .01em;
+    }
+    .btn-cta:active  { transform: scale(.96); background: var(--color-cta-d); }
+    .btn-cta:disabled { opacity: .45; pointer-events: none; }
 
     /* ========================================================
        #lang-screen — 全螢幕語系選擇 Splash
     ======================================================== */
     #lang-screen {
-      background: linear-gradient(160deg, var(--color-navy) 0%, #2874A6 55%, #1A5276 100%);
+      background: linear-gradient(160deg, var(--color-navy) 0%, #2B6CB0 50%, #2558a0 100%);
       justify-content: center;
       align-items: center;
       padding: 2rem 1.25rem 2.5rem;
@@ -162,38 +216,41 @@
     }
 
     .lang-card {
-      background: rgba(255,255,255,.12);
-      border: 1.5px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.13);
+      border: 2px solid rgba(255,255,255,.25);
       border-radius: var(--radius-card);
-      padding: 1.1rem .9rem 1rem;
+      padding: 1.2rem .9rem 1.1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: .4rem;
+      gap: .45rem;
       cursor: pointer;
-      backdrop-filter: blur(8px);
-      transition: transform var(--transition), background var(--transition), border-color var(--transition);
+      backdrop-filter: blur(10px);
+      min-height: 100px;           /* Thumb-Friendly */
+      transition: transform var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
     .lang-card:hover {
-      background: rgba(255,255,255,.2);
-      border-color: rgba(255,255,255,.45);
+      background: rgba(255,255,255,.22);
+      border-color: rgba(255,255,255,.5);
+      transform: translateY(-2px);
     }
     .lang-card:active {
       transform: scale(.93);
-      background: rgba(255,107,53,.4);
-      border-color: var(--color-primary);
+      background: rgba(221,107,32,.35);   /* 暖心橘 active */
+      border-color: var(--color-cta);
     }
     .lang-card.selected {
-      background: rgba(255,107,53,.35);
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(255,107,53,.45);
+      background: rgba(221,107,32,.3);    /* 暖心橘 selected */
+      border-color: var(--color-cta);
+      box-shadow: 0 0 0 3px rgba(221,107,32,.4);
     }
 
-    .lang-flag   { font-size: 2.4rem; line-height: 1; }
-    .lang-native { font-size: 1rem; font-weight: 700; color: #FFFFFF; text-align: center; }
-    .lang-zh     { font-size: .75rem; color: rgba(255,255,255,.65); margin-top: .05rem; }
+    /* 國旗放大、母語加粗、中文說明字小灰 */
+    .lang-flag   { font-size: 2.8rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
+    .lang-native { font-size: 1.05rem; font-weight: 800; color: #FFFFFF; text-align: center; letter-spacing: .01em; }
+    .lang-zh     { font-size: .78rem; color: rgba(255,255,255,.7); margin-top: .05rem; }
 
     /* ========================================================
        #auth-screen — 登入頁
@@ -311,8 +368,8 @@
       transition: background var(--transition), color var(--transition);
       -webkit-tap-highlight-color: transparent;
     }
-    .btn-add-user:hover  { background: rgba(255,107,53,.08); }
-    .btn-add-user:active { background: rgba(255,107,53,.18); transform: scale(.97); }
+    .btn-add-user:hover  { background: rgba(43,108,176,.08); }
+    .btn-add-user:active { background: rgba(43,108,176,.16); transform: scale(.97); }
 
     /* ========================================================
        PIN 輸入 Modal
@@ -502,7 +559,7 @@
     .identity-btn:active { transform: scale(.96); }
     .identity-btn.selected {
       border-color: var(--color-primary);
-      background: rgba(255,107,53,.08);
+      background: var(--color-primary-l);
       color: var(--color-primary);
     }
 
@@ -530,7 +587,7 @@
     }
     .avatar-btn.selected {
       border-color: var(--color-primary);
-      background: rgba(255,107,53,.1);
+      background: var(--color-primary-l);
       transform: scale(1.12);
     }
     .avatar-btn:active { transform: scale(.92); }
@@ -939,7 +996,7 @@
     .body-part-card:active { transform: scale(.96); }
     .body-part-card.selected {
       border-color: var(--color-primary);
-      background: rgba(255,107,53,.08);
+      background: var(--color-primary-l);
     }
     .body-part-card .bp-emoji { font-size: 2.2rem; line-height: 1; }
     .body-part-card .bp-name  { font-size: .85rem; font-weight: 700; color: var(--color-text); text-align: center; }
@@ -978,7 +1035,7 @@
     .symptom-card:active { transform: scale(.96); }
     .symptom-card.selected {
       border-color: var(--color-primary);
-      background: rgba(255,107,53,.08);
+      background: var(--color-primary-l);
     }
     .symptom-card.disabled {
       opacity: .45;
@@ -1008,17 +1065,18 @@
     .symptom-btn-row .btn-primary { flex: 1; }
     .btn-outline {
       flex: 1;
-      padding: .75rem 1rem;
-      border-radius: 14px;
+      padding: .82rem 1rem;
+      border-radius: var(--radius-btn);
       border: 2px solid var(--color-primary);
       background: transparent;
       color: var(--color-primary);
       font-size: .95rem;
       font-weight: 700;
+      min-height: 52px;
       cursor: pointer;
       transition: background .15s;
     }
-    .btn-outline:active { background: rgba(255,107,53,.1); transform: scale(.97); }
+    .btn-outline:active { background: var(--color-primary-l); transform: scale(.97); }
     .btn-outline:disabled { opacity: .45; pointer-events: none; }
     .btn-primary:disabled { opacity: .45; pointer-events: none; }
 
@@ -1068,20 +1126,52 @@
       color: var(--color-muted);
       padding: .2rem .4rem;
     }
+    /* ── 問診卡雙語對照樣式 ── */
+
+    /* 上方：大字中文（給台灣醫生看） */
     .med-card-block {
       background: var(--color-surface);
-      border: 1.5px solid var(--color-border);
-      border-radius: 14px;
-      padding: 1rem 1.1rem;
-      margin-bottom: .8rem;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-card);
+      padding: 1.1rem 1.2rem;
+      margin-bottom: .75rem;
+    }
+    /* 中文區塊（主要，上方大字） */
+    .med-card-block.block-zh {
+      background: var(--color-primary-l);
+      border-color: var(--color-primary);
+      border-left: 5px solid var(--color-primary);
+    }
+    /* 母語區塊（輔助，下方小字） */
+    .med-card-block.block-native {
+      background: #FFFAF0;
+      border-color: var(--color-cta);
+      border-left: 5px solid var(--color-cta);
     }
     .med-card-block-label {
-      font-size: .7rem;
+      font-size: .68rem;
       color: var(--color-muted);
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .04em;
-      margin-bottom: .45rem;
+      letter-spacing: .06em;
+      margin-bottom: .5rem;
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+    }
+    /* 中文大字：給醫生看 */
+    .block-zh .med-card-content {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--color-navy);
+      line-height: 1.55;
+    }
+    /* 母語小字：給使用者確認 */
+    .block-native .med-card-content {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--color-cta-d);
+      line-height: 1.6;
     }
     .med-card-content {
       font-size: 1.3rem;
@@ -1091,17 +1181,17 @@
     }
     .med-card-divider {
       border: none;
-      border-top: 1.5px dashed var(--color-border);
-      margin: .7rem 0;
+      border-top: 2px dashed var(--color-border);
+      margin: .75rem 0;
     }
     .med-card-urgent {
-      background: #fff0f0;
-      border: 1.5px solid #ff4d4d;
-      border-radius: 12px;
-      padding: .7rem 1rem;
-      color: #c0392b;
-      font-weight: 700;
-      font-size: .92rem;
+      background: var(--color-danger-l);
+      border: 2px solid var(--color-danger);
+      border-radius: var(--radius-btn);
+      padding: .8rem 1rem;
+      color: var(--color-danger);
+      font-weight: 800;
+      font-size: .95rem;
       text-align: center;
       margin-bottom: .8rem;
     }
@@ -1434,7 +1524,7 @@
     }
     .map-filter-tab.active {
       border-color: var(--color-primary);
-      background: rgba(255,107,53,.1);
+      background: var(--color-primary-l);
       color: var(--color-primary);
     }
 
@@ -1464,7 +1554,7 @@
     .location-card:active { box-shadow: var(--shadow-card); border-color: var(--color-primary); }
     .location-card.nearby {
       border-color: var(--color-primary);
-      background: rgba(255,107,53,.04);
+      background: rgba(43,108,176,.04);
     }
     .location-card-stripe {
       width: 5px;
@@ -1537,7 +1627,7 @@
       left: .75rem;
       right: .75rem;
       z-index: 300;
-      background: #FF8C00;
+      background: var(--color-cta);    /* 暖心橘 */
       color: #fff;
       border-radius: 14px;
       padding: .75rem 1rem;
@@ -1560,7 +1650,7 @@
     }
     .game-toast-start {
       background: #fff;
-      color: #FF8C00;
+      color: var(--color-cta);
       border: none;
       border-radius: 8px;
       padding: .45rem .9rem;
@@ -2398,7 +2488,7 @@
             <span style="font-size:12px;color:#aaa">Map loading, please check your internet connection</span>
             <button onclick="retryMapLoad()" style="
               margin-top:8px; padding:10px 24px;
-              background:#FF6B35; color:#fff; border:none;
+              background:#DD6B20; color:#fff; border:none;
               border-radius:24px; font-size:14px; cursor:pointer;">
               🔄 重新載入地圖
             </button>
@@ -2474,13 +2564,13 @@
       <!-- 緊急警示（有緊急症狀時顯示） -->
       <div class="med-card-urgent" id="card-urgent" style="display:none"></div>
       <!-- 母語區塊 -->
-      <div class="med-card-block">
+      <div class="med-card-block block-native">
         <p class="med-card-block-label" id="card-native-label"></p>
         <p class="med-card-content" id="card-native-content"></p>
       </div>
       <hr class="med-card-divider">
       <!-- 中文區塊 -->
-      <div class="med-card-block">
+      <div class="med-card-block block-zh">
         <p class="med-card-block-label" id="card-zh-label"></p>
         <p class="med-card-content" id="card-zh-content"></p>
       </div>
@@ -3704,7 +3794,7 @@
           <div style="font-size:.76rem;color:#555;margin-bottom:.3rem;">🕐 ${loc.hours}</div>
           <div style="margin-bottom:.35rem;">${langBadges}</div>
           <a href="tel:${loc.phone}" style="display:inline-block;padding:.3rem .75rem;
-            background:${cfg.color || '#FF6B35'};color:#fff;border-radius:8px;
+            background:${cfg.color || '#2B6CB0'};color:#fff;border-radius:8px;
             font-size:.82rem;font-weight:700;text-decoration:none;">📞 ${loc.phone}</a>
         </div>`;
     }
@@ -3725,7 +3815,7 @@
           if (ph) ph.innerHTML = `
             <span style="font-size:40px">📵</span>
             <span style="color:#e74c3c">無法連線，請確認網路後再試</span>
-            <button onclick="retryMapLoad()" style="margin-top:8px;padding:10px 24px;background:#FF6B35;color:#fff;border:none;border-radius:24px;font-size:14px;cursor:pointer;">🔄 重試</button>`;
+            <button onclick="retryMapLoad()" style="margin-top:8px;padding:10px 24px;background:#DD6B20;color:#fff;border:none;border-radius:24px;font-size:14px;cursor:pointer;">🔄 重試</button>`;
         };
         document.head.appendChild(s);
       } else {
@@ -3747,7 +3837,7 @@
             <span style="font-size:40px">📵</span>
             <span style="color:#e74c3c">地圖載入失敗，請確認網路連線</span>
             <span style="font-size:12px;color:#aaa">Map failed to load. Check your connection.</span>
-            <button onclick="retryMapLoad()" style="margin-top:8px;padding:10px 24px;background:#FF6B35;color:#fff;border:none;border-radius:24px;font-size:14px;cursor:pointer;">🔄 重新載入地圖</button>`;
+            <button onclick="retryMapLoad()" style="margin-top:8px;padding:10px 24px;background:#DD6B20;color:#fff;border:none;border-radius:24px;font-size:14px;cursor:pointer;">🔄 重新載入地圖</button>`;
         }
         const listEl = document.getElementById('map-location-list');
         if (listEl) listEl.innerHTML = `<p style="padding:1rem;color:var(--color-muted);">${t('mapOffline')}</p>`;
