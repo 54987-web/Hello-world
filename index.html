@@ -2066,9 +2066,8 @@
     }
     .rankup-toast.visible { transform: translateY(0); }
   </style>
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Leaflet CSS（移除 integrity 避免驗證失敗，雙 CDN 備援） -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
   <style>
     /* 確保互動按鈕觸控面積符合 44px 最低標準 */
     .btn-primary { min-height: 44px; }
@@ -2386,7 +2385,23 @@
       <!-- 資源地圖 View（ST6） -->
       <div id="map-view" class="main-view">
         <!-- 地圖容器 -->
-        <div id="leaflet-map"></div>
+        <div id="leaflet-map">
+          <!-- 地圖未載入時的佔位提示（有網路後會被 Leaflet 覆蓋） -->
+          <div id="map-placeholder" style="
+            display:flex; flex-direction:column; align-items:center;
+            justify-content:center; height:100%; gap:10px;
+            color:#888; font-size:15px; text-align:center; padding:20px;">
+            <span style="font-size:40px">🗺️</span>
+            <span>地圖載入中，請確認網路連線…</span>
+            <span style="font-size:12px;color:#aaa">Map loading, please check your internet connection</span>
+            <button onclick="retryMapLoad()" style="
+              margin-top:8px; padding:10px 24px;
+              background:#FF6B35; color:#fff; border:none;
+              border-radius:24px; font-size:14px; cursor:pointer;">
+              🔄 重新載入地圖
+            </button>
+          </div>
+        </div>
         <!-- 控制列 -->
         <div class="map-controls">
           <button class="map-locate-btn" id="map-locate-btn" onclick="locateMe()">
@@ -2523,9 +2538,26 @@
     </div>
   </div>
 
-  <!-- Leaflet JS（必須在 data scripts 之前，確保 L 全域可用） -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLEg=" crossorigin=""></script>
+  <!-- Leaflet JS（移除 integrity，備援 CDN） -->
+  <script>
+    (function() {
+      var s = document.createElement('script');
+      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      s.crossOrigin = '';
+      s.onerror = function() {
+        // unpkg 失敗時改用 jsDelivr
+        var s2 = document.createElement('script');
+        s2.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+        document.head.appendChild(s2);
+        // 同步替換 CSS
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
   <!-- ===== 語系資料 ===== -->
   <script src="lang-data.js"></script>
   <!-- ===== 問診卡資料（Sub-Task 4）===== -->
@@ -3687,9 +3719,42 @@
      * initMap()
      * 初始化 Leaflet 地圖，優先使用 user.lastLocation，否則高雄市中心
      */
+    function retryMapLoad() {
+      _mapState.initialized = false;
+      // 重新嘗試載入 Leaflet（若尚未載入）
+      if (typeof L === 'undefined') {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+        s.onload = () => { setTimeout(initMap, 300); };
+        s.onerror = () => {
+          const ph = document.getElementById('map-placeholder');
+          if (ph) ph.innerHTML = `
+            <span style="font-size:40px">📵</span>
+            <span style="color:#e74c3c">無法連線，請確認網路後再試</span>
+            <button onclick="retryMapLoad()" style="margin-top:8px;padding:10px 24px;background:#FF6B35;color:#fff;border:none;border-radius:24px;font-size:14px;cursor:pointer;">🔄 重試</button>`;
+        };
+        document.head.appendChild(s);
+      } else {
+        initMap();
+      }
+    }
+
     function initMap() {
       if (_mapState.initialized) return;
+      // 隱藏佔位提示
+      const ph = document.getElementById('map-placeholder');
+      if (ph) ph.style.display = 'none';
+
       if (typeof L === 'undefined') {
+        // Leaflet 尚未載入：顯示錯誤提示
+        if (ph) {
+          ph.style.display = 'flex';
+          ph.innerHTML = `
+            <span style="font-size:40px">📵</span>
+            <span style="color:#e74c3c">地圖載入失敗，請確認網路連線</span>
+            <span style="font-size:12px;color:#aaa">Map failed to load. Check your connection.</span>
+            <button onclick="retryMapLoad()" style="margin-top:8px;padding:10px 24px;background:#FF6B35;color:#fff;border:none;border-radius:24px;font-size:14px;cursor:pointer;">🔄 重新載入地圖</button>`;
+        }
         const listEl = document.getElementById('map-location-list');
         if (listEl) listEl.innerHTML = `<p style="padding:1rem;color:var(--color-muted);">${t('mapOffline')}</p>`;
         return;
